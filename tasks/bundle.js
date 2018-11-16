@@ -1,33 +1,25 @@
-'use strict';
-
 const path = require('path');
 const { rollup } = require('rollup');
-const rollupJson = require('rollup-plugin-json');
 const appManifest = require('../package.json');
+const builtinModules = require('builtin-modules');
 
-const nodeBuiltInModules = ['assert', 'buffer', 'child_process', 'cluster', 'console', 'constants', 'crypto', 'dgram',
-	'dns', 'domain', 'events', 'fs', 'http', 'https', 'module', 'net', 'os', 'path', 'process', 'punycode', 'querystring',
-	'readline', 'repl', 'stream', 'string_decoder', 'timers', 'tls', 'tty', 'url', 'util', 'v8', 'vm', 'zlib'];
 
-const electronBuiltInModules = ['electron'];
-
-const externalModulesList = [
-	...nodeBuiltInModules,
-	...electronBuiltInModules,
+const externalModules = [
+	...builtinModules,
 	...Object.keys(appManifest.dependencies),
 	...Object.keys(appManifest.devDependencies),
 ];
 
-const cached = {};
+const cachedModules = {};
 
-module.exports = async(src, dest, opts = {}) => {
+module.exports = async(src, dest, { rollupPlugins = [] } = {}) => {
 	const inputOptions = {
 		input: src,
-		external: externalModulesList,
-		cache: cached[src],
+		external: externalModules,
+		cache: cachedModules[src],
 		plugins: [
-			...(opts.rollupPlugins || []),
-			rollupJson(),
+			...rollupPlugins,
+			require('rollup-plugin-json')(),
 		],
 	};
 
@@ -40,7 +32,6 @@ module.exports = async(src, dest, opts = {}) => {
 		sourcemapFile: path.basename(dest),
 	};
 
-	const bundle = await rollup(inputOptions);
-	cached[src] = bundle;
-	await bundle.write(outputOptions);
+	cachedModules[src] = await rollup(inputOptions);
+	await cachedModules[src].write(outputOptions);
 };
