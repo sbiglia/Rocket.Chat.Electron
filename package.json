@@ -14,7 +14,7 @@
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "start": "gulp start",
+    "start": "node scripts/start",
     "build": "gulp build-app",
     "changelog": "conventional-changelog --config .github/changelog.js -i HISTORY.md -s",
     "release": "node scripts/release --env=production",
