@@ -3,6 +3,7 @@ const jetpack = require('fs-jetpack');
 const bundle = require('./bundle');
 const istanbul = require('rollup-plugin-istanbul');
 
+
 const createEntryFile = async(srcDir, matching, outputDir, entryFileName, rollupOptions) => {
 	const entryFileContent = srcDir.find('.', { matching })
 		.map((path) => `import './${ path.replace(/\\/g, '/') }';`)
@@ -15,12 +16,11 @@ const createEntryFile = async(srcDir, matching, outputDir, entryFileName, rollup
 	srcDir.remove(entryFileName);
 };
 
-gulp.task('build-unit-tests', ['environment'], () => {
+gulp.task('build-unit-tests', ['build-app'], () => {
 	const rollupOptions = {
 		rollupPlugins: [
 			istanbul({
 				exclude: ['**/*.spec.js', '**/*.specs.js'],
-				sourcemap: true,
 			}),
 		],
 	};

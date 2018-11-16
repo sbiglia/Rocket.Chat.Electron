@@ -1,26 +1,23 @@
-var istanbul = require('istanbul');
+const { reporters: { Base } } = require('mocha');
+const NYC = require('nyc');
 
-module.exports = function (runner, options) {
-    mocha.reporters.Base.call(this, runner);
 
-    var reporterOpts = { dir: 'coverage' },
-        reporters = ['text-summary', 'html'];
+module.exports = function (runner, options = {}) {
+	Base.call(this, runner, options);
 
-    options = options || {};
-    if (options.reporters) reporters = options.reporters.split(',');
-    if (process.env.ISTANBUL_REPORTERS) reporters = process.env.ISTANBUL_REPORTERS.split(',');
-    if (options.reportDir) reporterOpts.dir = options.reportDir;
-    if (process.env.ISTANBUL_REPORT_DIR) reporterOpts.dir = process.env.ISTANBUL_REPORT_DIR;
-
-    runner.on('end', function(){
-        var cov = global.__coverage__ || {},
-            collector = new istanbul.Collector();
-
-        collector.add(cov);
-
-        reporters.forEach(function(reporter) {
-            istanbul.Report.create(reporter, reporterOpts).writeReport(collector, true);
-        });
-
-    });
+	runner.on('end', () => {
+		const nyc = new NYC({ include: 'src/' });
+		nyc.createTempDirectory();
+		nyc.addAllFiles();
+	});
 };
+
+if (require.main === module) {
+	const nyc = new NYC({
+		include: 'src/',
+		reporters: ['text-summary', 'html'],
+		reportDir: 'coverage',
+	});
+	nyc.report();
+	nyc.cleanup();
+}
