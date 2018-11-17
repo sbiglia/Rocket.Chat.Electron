@@ -1,13 +1,11 @@
-'use strict';
-
 const gulp = require('gulp');
 const batch = require('gulp-batch');
-const less = require('gulp-less');
 const plumber = require('gulp-plumber');
 const watch = require('gulp-watch');
 const bundle = require('./bundle');
 const utils = require('./utils');
 const { beepSound, srcDir, configDir, appDir } = require('./utils');
+
 
 gulp.task('public', () => gulp.src(srcDir.path('public/**/*'))
 	.pipe(plumber())
@@ -23,14 +21,9 @@ gulp.task('bundle', () => Promise.all([
 	bundle(srcDir.path('i18n/index.js'), appDir.path('i18n/index.js')),
 ]));
 
-gulp.task('less', () => gulp.src(srcDir.path('stylesheets/main.less'))
-	.pipe(plumber())
-	.pipe(less())
-	.pipe(gulp.dest(appDir.path('stylesheets'))));
-
 gulp.task('environment', () => appDir.writeAsync('env.json', JSON.stringify({ name: utils.getEnvName() })));
 
-gulp.task('build-app', ['public', 'i18n', 'bundle', 'less', 'environment']);
+gulp.task('build-app', ['public', 'i18n', 'bundle', 'environment']);
 
 gulp.task('watch', () => {
 	const runOnChanges = (taskName) => batch((event, done) => {
