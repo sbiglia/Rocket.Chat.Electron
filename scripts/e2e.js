@@ -7,6 +7,6 @@ if (require.main === module) {
 		'mocha app/e2e.specs.js --require source-map-support/register',
 	].forEach((cmd) => {
 		console.log(`$ ${ cmd }`);
-		execSync(cmd, { shell: true, stdio: 'inherit' });
+		execSync(cmd, { stdio: 'inherit' });
 	});
 }

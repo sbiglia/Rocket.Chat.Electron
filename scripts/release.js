@@ -33,10 +33,10 @@ if (require.main === module) {
 	const env = minimist(process.argv).env || 'development';
 
 	[
-		`node_modules/.bin/gulp build-app --env=${ env }`,
+		`gulp build-app --env=${ env }`,
 	].forEach((cmd) => {
 		console.log(`$ ${ cmd }`);
-		execSync(cmd, { shell: true, stdio: 'inherit' });
+		execSync(cmd, { stdio: 'inherit' });
 	});
 
 	const publish = env === 'production' ? 'onTagOrDraft' : 'never';

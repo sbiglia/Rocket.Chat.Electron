@@ -6,19 +6,19 @@ if (require.main === module) {
 	const env = minimist(process.argv).env || 'development';
 
 	[
-		`node_modules/.bin/gulp build-app --env=${ env }`,
+		`gulp build-app --env=${ env }`,
 	].forEach((cmd) => {
 		console.log(`$ ${ cmd }`);
-		execSync(cmd, { shell: true, stdio: 'inherit' });
+		execSync(cmd, { stdio: 'inherit' });
 	});
 
 	[
-		`node_modules/.bin/gulp watch --env=${ env }`,
-		'node_modules/.bin/electron .',
+		`gulp watch --env=${ env }`,
+		'electron .',
 	].forEach((cmd) => {
 		console.log(`$ ${ cmd }`);
 		const [executable, ...args] = cmd.split(' ');
-		const subprocess = spawn(executable, args, { shell: true, stdio: 'inherit' });
+		const subprocess = spawn(executable, args, { stdio: 'inherit' });
 		subprocess.on('close', (code) => process.exit(code));
 		process.on('exit', () => subprocess.kill());
 	});

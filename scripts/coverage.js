@@ -15,12 +15,12 @@ module.exports = function(runner, options = {}) {
 
 if (require.main === module) {
 	[
-		'node_modules/.bin/gulp build-unit-tests --env=test --coverage',
-		'node_modules/.bin/electron-mocha app/main.specs.js --require source-map-support/register --reporter scripts/coverage',
-		'node_modules/.bin/electron-mocha app/renderer.specs.js --renderer --require source-map-support/register --reporter scripts/coverage',
+		'gulp build-unit-tests --env=test --coverage',
+		'electron-mocha app/main.specs.js --require source-map-support/register --reporter scripts/coverage',
+		'electron-mocha app/renderer.specs.js --renderer --require source-map-support/register --reporter scripts/coverage',
 	].forEach((cmd) => {
 		console.log(`$ ${ cmd }`);
-		execSync(cmd, { shell: true, stdio: 'inherit' });
+		execSync(cmd, { stdio: 'inherit' });
 	});
 
 	const nyc = new NYC({
