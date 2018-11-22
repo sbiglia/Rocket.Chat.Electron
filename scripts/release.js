@@ -20,8 +20,8 @@ const builders = {
 		const { linux: { target } } = require('../electron-builder.json');
 		const allLinuxTargetsButSnap = target.filter((target) => target !== 'snap');
 
-		await build({ publish, x64: true, linux: [], c: { productName: 'rocketchat' } });
-		await build({ publish, ia32: true, linux: allLinuxTargetsButSnap, c: { productName: 'rocketchat' } });
+		await build({ publish, ia32: true, x64: true, linux: allLinuxTargetsButSnap, c: { productName: 'rocketchat' } });
+		await build({ publish, x64: true, linux: ['snap'], c: { productName: 'rocketchat' } });
 	},
 
 	win32: async({ publish }) => {
