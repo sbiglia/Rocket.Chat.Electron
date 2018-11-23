@@ -1,7 +1,10 @@
 const path = require('path');
 const builtinModules = require('builtin-modules');
-const { rollup } = require('rollup');
 const appManifest = require('../package.json');
+const { rollup } = require('rollup');
+const istanbul = require('rollup-plugin-istanbul');
+const json = require('rollup-plugin-json');
+const memory = require('rollup-plugin-memory');
 
 
 const externalModules = [
@@ -12,14 +15,15 @@ const externalModules = [
 
 const cachedModules = {};
 
-module.exports = async(src, dest, { coverage = false } = {}) => {
+module.exports = async(src, dest, { env = 'development', coverage = false } = {}) => {
 	const inputOptions = {
 		input: src,
 		external: externalModules,
 		cache: cachedModules[src],
 		plugins: [
-			require('rollup-plugin-json')(),
-			coverage && require('rollup-plugin-istanbul')({
+			json(),
+			src.path && src.contents && memory(),
+			coverage && istanbul({
 				exclude: ['**/*.spec.js', '**/*.specs.js'],
 			}),
 		],
