@@ -19,9 +19,6 @@ module.exports = async(src, dest, { coverage = false } = {}) => {
 		cache: cachedModules[src],
 		plugins: [
 			require('rollup-plugin-json')(),
-			require('rollup-plugin-less')({
-				output: 'app/stylesheets/main.css',
-			}),
 			coverage && require('rollup-plugin-istanbul')({
 				exclude: ['**/*.spec.js', '**/*.specs.js'],
 			}),
