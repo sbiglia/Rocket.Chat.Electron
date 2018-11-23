@@ -1,249 +1,255 @@
-.rtl
-{
-  direction: rtl;
+.rtl {
+	direction: rtl;
 
-  // Mix-ins
-  .right(@right) {
-    right: @right;
-    left: auto;
-  }
+	.right(@right) {
+		right: @right;
+		left: auto;
+	}
 
-  .left (@left) {
-    left: @left;
-    right: auto;
-  }
+	.left (@left) {
+		right: auto;
+		left: @left;
+	}
 
-  .margin-right(@margin-right) {
-    margin-right: @margin-right;
-    margin-left: auto;
-  }
+	.margin-right(@margin-right) {
+		margin-right: @margin-right;
+		margin-left: auto;
+	}
 
-  .margin-left(@margin-left) {
-    margin-left: @margin-left;
-    margin-right: auto;
-  }
+	.margin-left(@margin-left) {
+		margin-right: auto;
+		margin-left: @margin-left;
+	}
 
-  .padding-right(@padding-right) {
-    padding-right: @padding-right;
-    padding-left: 0px;
-  }
+	.padding-right(@padding-right) {
+		padding-right: @padding-right;
+		padding-left: 0;
+	}
 
-  .padding-left(@padding-left) {
-    padding-left: @padding-left;
-    padding-right: 0px;
-  }
+	.padding-left(@padding-left) {
+		padding-right: 0;
+		padding-left: @padding-left;
+	}
 
-  .side-nav {
-    .right(0px);
+	.side-nav {
+		.right(0);
 
-    .header {
-      .right(0px);
+		.header {
+			.right(0);
 
-      .account-box {
-        .info {
-          padding: 10px 18px 10px 0px;
+			.account-box {
+				.info {
+					padding: 10px 18px 10px 0;
 
-          .thumb {
-            float: right;
-          }
-          .thumb:after {
-            .right(-14px);
-          }
+					.thumb {
+						float: right;
+					}
 
-          .data {
-            float: right;
-            padding: 0 10px 0 25px;
+					.thumb::after {
+						.right(-14px);
+					}
 
-            .wrp {
-              text-align: right;
-            }
-          }
-        }
+					.data {
+						float: right;
 
-        .options {
-          .right(0px);
+						padding: 0 10px 0 25px;
 
-          .status {
-            .padding-right(38px);
-          }
+						.wrp {
+							text-align: right;
+						}
+					}
+				}
 
-          span.soon {
-           .left(-30px);
-         }
+				.options {
+					.right(0);
 
-          .status:after {
-            .right(18px);
-          }
-        }
-        .options._hidden {
-          transform: translateX(100%);
-        }
+					.status {
+						.padding-right(38px);
+					}
 
-      }
-    }
+					span.soon {
+						.left(-30px);
+					}
 
-    > .arrow {
-      .left(8px);
-    }
+					.status::after {
+						.right(18px);
+					}
+				}
 
-    .arrow {
-      transform: rotateY(180deg);
-    }
+				.options._hidden {
+					transform: translateX(100%);
+				}
+			}
+		}
 
-    .flex-nav {
-      .right(0px);
-    }
+		> .arrow {
+			.left(8px);
+		}
 
-    .flex-nav.hidden {
-      transform: translateX(100%);
-    }
+		.arrow {
+			transform: rotateY(180deg);
+		}
 
-    .footer {
-      .right(0px);
-    }
+		.footer {
+			.right(0);
+		}
 
-    .rooms-list {
-      > .wrapper {
-        direction: rtl;
-        .padding-right(8px);
+		.rooms-list {
+			> .wrapper {
+				direction: rtl;
+				.padding-right(8px);
 
-        h3.add-room
-        {
-          i {
-            .left(6px);
-          }
-        }
+				h3.add-room {
+					i {
+						.left(6px);
+					}
+				}
 
-        h3 {
-          .padding-right(10px);
-        }
+				h3 {
+					.padding-right(10px);
+				}
 
-        ul a {
-          padding: 6px 6px 7px 25px;
-        }
-      }
-    }
+				ul a {
+					padding: 6px 6px 7px 25px;
+				}
+			}
+		}
 
-    .more {
-      padding: 4px 10px 4px 0px;
-    }
-    .empty {
-      .padding-right(10px);
-    }
+		.more {
+			padding: 4px 10px 4px 0;
+		}
 
-    ul .opt {
-      .left(0px);
-      .padding-left(10px);
-    }
+		.empty {
+			.padding-right(10px);
+		}
 
-    .flex-nav {
-      > section {
-        .right(0px);
-      }
+		ul .opt {
+			.left(0);
+			.padding-left(10px);
+		}
 
-      header {
-        .right(0px);
-        .padding-right(15px);
+		.flex-nav {
+			.right(0);
 
-        > div {
-          text-align: right;
-        }
-      }
+			> section {
+				.right(0);
+			}
 
-      .content {
-        > .wrapper {
-          direction: rtl;
-        }
-      }
-      .input-submit {
-        margin: 35px -4px 0 0px;
-      }
+			header {
+				.right(0);
+				.padding-right(15px);
 
-      .button:before {
-        .right(0px);
-      }
+				> div {
+					text-align: right;
+				}
+			}
 
-      footer {
-        .right(0px);
-        text-align: right;
+			.content {
+				> .wrapper {
+					direction: rtl;
+				}
+			}
 
-        > div {
-          text-align: right;
-        }
-      }
-    }
-  }
+			.input-submit {
+				margin: 35px -4px 0 0;
+			}
 
-  .side-nav:before {
-    .right(8px);
-  }
+			.button::before {
+				.right(0);
+			}
 
-  .main-content {
-    .margin-right(260px);
-  }
+			footer {
+				.right(0);
+				text-align: right;
 
-  .messages-box {
-    margin: 60px 0px 20px 0px;
+				> div {
+					text-align: right;
+				}
+			}
+		}
+	}
 
-    .message {
-      padding-right: 50px;
-      padding-left: 50px;
-        margin: 12px 20px 5px 20px;
-        .thumb {
-          .right(0px);
-        }
-      }
+	.flex-nav.hidden {
+		transform: translateX(100%);
+	}
 
-      .message.new-day {
-        margin-top: 60px;
-      }
-      .message.sequential {
-        .info {
-          .right(-15px);
-          .edited, .time {
-            float: left;
-          }
-          .edit-message {
-            float: right;
-            .margin-right(5px);
-          }
-        }
+	.side-nav::before {
+		.right(8px);
+	}
 
-       .message.with-thumb .time {
-         .right(4px);
-       }
+	.main-content {
+		.margin-right(260px);
+	}
 
-        .time-single {
-          .right(-15px);
-       }
-    }
+	.messages-box {
+		margin: 60px 0 20px;
 
-  }
+		.message {
+			margin: 12px 20px 5px;
+			padding-right: 50px;
+			padding-left: 50px;
 
-  .messages-container {
-    .message-form {
-      textarea {
-          padding-left: 38px;
-          padding-right: 8px;
-        }
-       >.users-typing {
-         float: right;
-       }
-     }
+			.thumb {
+				.right(0);
+			}
+		}
 
-     > .formatting-tips {
-       float: left;
-     }
-     .icon-paper-plane {
-      .left(10px);
-      transform: rotateY(180deg);
-    }
-  }
+		.message.new-day {
+			margin-top: 60px;
+		}
 
-  q {
-    .padding-right(10px);
-  }
-  q:before {
-    .right(50px);
-  }
+		.message.sequential {
+			.info {
+				.right(-15px);
+
+				.edited,
+				.time {
+					float: left;
+				}
+
+				.edit-message {
+					float: right;
+					.margin-right(5px);
+				}
+			}
+
+			.message.with-thumb .time {
+				.right(4px);
+			}
+
+			.time-single {
+				.right(-15px);
+			}
+		}
+	}
+
+	.messages-container {
+		.message-form {
+			textarea {
+				padding-right: 8px;
+				padding-left: 38px;
+			}
+
+			> .users-typing {
+				float: right;
+			}
+		}
+
+		> .formatting-tips {
+			float: left;
+		}
+
+		.icon-paper-plane {
+			.left(10px);
+			transform: rotateY(180deg);
+		}
+	}
+
+	q {
+		.padding-right(10px);
+	}
+
+	q::before {
+		.right(50px);
+	}
 }
