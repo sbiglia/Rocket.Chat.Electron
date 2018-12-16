@@ -1,7 +1,8 @@
-import { app, Menu } from 'electron';
+import { remote } from 'electron';
 import { EventEmitter } from 'events';
-import { getMainWindow } from './mainWindow';
 import i18n from '../i18n/index.js';
+const { app, Menu, getCurrentWindow } = remote;
+
 
 const createTemplate = ({
 	appName,
@@ -315,14 +316,14 @@ class Menus extends EventEmitter {
 		return Menu.getApplicationMenu().getMenuItemById(id);
 	}
 
-	async update() {
+	update() {
 		const template = createTemplate({ appName: app.getName(), ...this.state }, this);
 		const menu = Menu.buildFromTemplate(template);
 		Menu.setApplicationMenu(menu);
 
 		if (process.platform !== 'darwin') {
 			const { showMenuBar } = this.state;
-			const mainWindow = await getMainWindow();
+			const mainWindow = getCurrentWindow();
 			mainWindow.setAutoHideMenuBar(!showMenuBar);
 			mainWindow.setMenuBarVisibility(!!showMenuBar);
 		}
@@ -331,4 +332,4 @@ class Menus extends EventEmitter {
 	}
 }
 
-export default new Menus();
+export default new Menus;

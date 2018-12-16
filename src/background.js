@@ -8,7 +8,6 @@ import appData from './background/appData';
 import certificate from './background/certificate';
 import dock from './background/dock';
 import { addServer, getMainWindow } from './background/mainWindow';
-import menus from './background/menus';
 import './background/notifications';
 import './background/screenshareDialog';
 import tray from './background/tray';
@@ -18,7 +17,7 @@ import './background/updates';
 import i18n from './i18n/index.js';
 
 export { default as remoteServers } from './background/servers';
-export { certificate, dock, menus, tray };
+export { certificate, dock, tray };
 
 
 process.env.GOOGLE_API_KEY = 'AIzaSyADqUh_c1Qhji3Cp1NE43YrcpuPkmhXD-c';
