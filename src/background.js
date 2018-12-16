@@ -6,7 +6,6 @@ import idle from '@paulcbetts/system-idle-time';
 import './background/aboutDialog';
 import appData from './background/appData';
 import certificate from './background/certificate';
-import dock from './background/dock';
 import { addServer, getMainWindow } from './background/mainWindow';
 import './background/notifications';
 import './background/screenshareDialog';
@@ -16,8 +15,9 @@ import './background/updates';
 
 import i18n from './i18n/index.js';
 
+export { default as icon } from './background/icon';
 export { default as remoteServers } from './background/servers';
-export { certificate, dock, tray };
+export { certificate, tray };
 
 
 process.env.GOOGLE_API_KEY = 'AIzaSyADqUh_c1Qhji3Cp1NE43YrcpuPkmhXD-c';
