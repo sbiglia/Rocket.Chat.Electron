@@ -1,4 +1,4 @@
-import { remote, ipcRenderer, shell } from 'electron';
+import { ipcRenderer, remote, shell } from 'electron';
 import dock from './dock';
 import menus from './menus';
 import servers from './servers';
@@ -141,22 +141,56 @@ const attachMenusEvents = () => {
 };
 
 const attachServersEvents = () => {
-	servers.on('loaded', updateServers);
-	servers.on('active-cleared', updateServers);
-	servers.on('active-setted', updateServers);
-	servers.on('host-added', updateServers);
-	servers.on('host-removed', updateServers);
-	servers.on('title-setted', updateServers);
+	servers.on('loaded', () => {
+		webview.loaded();
+		updateServers();
+	});
+
+	servers.on('active-cleared', (hostUrl) => {
+		webview.deactiveAll(hostUrl);
+		sidebar.deactiveAll(hostUrl);
+		updateServers();
+	});
+
+	servers.on('active-setted', (hostUrl) => {
+		webview.setActive(hostUrl);
+		sidebar.setActive(hostUrl);
+
+		webview.getActive().send && webview.getActive().send('request-sidebar-color');
+
+		updateServers();
+	});
+
+	servers.on('host-added', (hostUrl) => {
+		webview.add(servers.get(hostUrl));
+		sidebar.add(servers.get(hostUrl));
+		updateServers();
+	});
+
+	servers.on('host-removed', (hostUrl) => {
+		webview.remove(hostUrl);
+		sidebar.remove(hostUrl);
+		updateServers();
+	});
+
+	servers.on('title-setted', (hostUrl, title) => {
+		sidebar.setLabel(hostUrl, title);
+		updateServers();
+	});
 };
 
 const attachSidebarEvents = () => {
-	sidebar.on('hosts-sorted', updateServers);
+	sidebar.on('servers-sorted', updateServers);
 
 	sidebar.on('badge-setted', () => {
 		const badge = sidebar.getGlobalBadge();
 		tray.setState({ badge });
 		dock.setState({ badge });
 	});
+
+	sidebar.on('reload-server', (hostUrl) => webview.getByUrl(hostUrl).reload());
+	sidebar.on('remove-server', (hostUrl) => servers.removeHost(hostUrl));
+	sidebar.on('open-devtools-for-server', (hostUrl) => webview.getByUrl(hostUrl).openDevTools());
 };
 
 const attachTrayEvents = () => {
@@ -168,8 +202,10 @@ const attachTrayEvents = () => {
 };
 
 const attachWebviewEvents = () => {
-	webview.on('ipc-message-unread-changed', (hostUrl, [count]) => {
-		if (typeof count === 'number' && localStorage.getItem('showWindowOnUnreadChanged') === 'true') {
+	webview.on('ipc-message-unread-changed', (hostUrl, [badge]) => {
+		sidebar.setBadge(hostUrl, badge);
+
+		if (typeof badge === 'number' && localStorage.getItem('showWindowOnUnreadChanged') === 'true') {
 			const mainWindow = remote.getCurrentWindow();
 			const isNeededToShow = !mainWindow.isFocused() || (mainWindow.isFocused() && !mainWindow.isVisible());
 			if (isNeededToShow) {
@@ -183,6 +219,21 @@ const attachWebviewEvents = () => {
 	webview.on('ipc-message-user-status-manually-set', (hostUrl, [status]) => {
 		tray.setState({ status });
 		dock.setState({ status });
+	});
+
+	webview.on('ipc-message-sidebar-background', (hostUrl, [color]) => {
+		sidebar.changeSidebarColor(color);
+	});
+
+	webview.on('dom-ready', (hostUrl) => {
+		sidebar.setActive(localStorage.getItem('rocket.chat.currentHost'));
+		webview.getActive().send('request-sidebar-color');
+		sidebar.setImage(hostUrl);
+		if (sidebar.isHidden()) {
+			sidebar.hide();
+		} else {
+			sidebar.show();
+		}
 	});
 };
 
@@ -204,6 +255,18 @@ export default () => {
 		}
 	});
 
+	window.addEventListener('keydown', (e) => {
+		if (e.key === 'Control' || e.key === 'Meta') {
+			sidebar.setKeyboardShortcutsVisible(true);
+		}
+	});
+
+	window.addEventListener('keyup', function(e) {
+		if (e.key === 'Control' || e.key === 'Meta') {
+			sidebar.setKeyboardShortcutsVisible(false);
+		}
+	});
+
 	attachMenusEvents();
 	attachServersEvents();
 	attachSidebarEvents();
@@ -211,7 +274,6 @@ export default () => {
 	attachWebviewEvents();
 	attachMainWindowEvents();
 
-	servers.restoreActive();
 	updatePreferences();
 	updateServers();
 	updateWindowState();

@@ -1,24 +1,14 @@
-import jetpack from 'fs-jetpack';
-import { EventEmitter } from 'events';
 import { remote, ipcRenderer } from 'electron';
+import { EventEmitter } from 'events';
+import jetpack from 'fs-jetpack';
 import i18n from '../i18n/index.js';
-const { remoteServers } = remote.require('./background');
+const { dialog, process } = remote;
+const { servers: remoteServers } = remote.require('./background');
+
 
 class Servers extends EventEmitter {
 	constructor() {
 		super();
-		this.load();
-		const processProtocol = this.getProtocolUrlFromProcess(remote.process.argv);
-		if (processProtocol) {
-			this.showHostConfirmation(processProtocol);
-		}
-		ipcRenderer.on('add-host', (e, host) => {
-			if (this.hostExists(host)) {
-				this.setActive(host);
-			} else {
-				this.showHostConfirmation(host);
-			}
-		});
 	}
 
 	get hosts() {
@@ -31,16 +21,8 @@ class Servers extends EventEmitter {
 		return true;
 	}
 
-	get hostsKey() {
-		return 'rocket.chat.hosts';
-	}
-
-	get activeKey() {
-		return 'rocket.chat.currentHost';
-	}
-
 	load() {
-		let hosts = localStorage.getItem(this.hostsKey);
+		let hosts = localStorage.getItem('rocket.chat.hosts');
 
 		try {
 			hosts = JSON.parse(hosts);
@@ -53,7 +35,7 @@ class Servers extends EventEmitter {
 				};
 			}
 
-			localStorage.setItem(this.hostsKey, JSON.stringify(hosts));
+			localStorage.setItem('rocket.chat.hosts', JSON.stringify(hosts));
 		}
 
 		if (hosts === null) {
@@ -70,7 +52,7 @@ class Servers extends EventEmitter {
 					url: item,
 				};
 			});
-			localStorage.setItem(this.hostsKey, JSON.stringify(hosts));
+			localStorage.setItem('rocket.chat.hosts', JSON.stringify(hosts));
 		}
 
 		// Load server info from server config file
@@ -90,7 +72,7 @@ class Servers extends EventEmitter {
 							const url = result[title];
 							hosts[url] = { title, url };
 						});
-						localStorage.setItem(this.hostsKey, JSON.stringify(hosts));
+						localStorage.setItem('rocket.chat.hosts', JSON.stringify(hosts));
 						// Assume user doesn't want sidebar if they only have one server
 						if (Object.keys(hosts).length === 1) {
 							localStorage.setItem('sidebar-closed', 'true');
@@ -109,7 +91,7 @@ class Servers extends EventEmitter {
 	}
 
 	save() {
-		localStorage.setItem(this.hostsKey, JSON.stringify(this._hosts));
+		localStorage.setItem('rocket.chat.hosts', JSON.stringify(this._hosts));
 		this.emit('saved');
 	}
 
@@ -193,7 +175,7 @@ class Servers extends EventEmitter {
 	}
 
 	get active() {
-		return localStorage.getItem(this.activeKey);
+		return localStorage.getItem('rocket.chat.currentHost');
 	}
 
 	setActive(hostUrl) {
@@ -205,7 +187,7 @@ class Servers extends EventEmitter {
 		}
 
 		if (url) {
-			localStorage.setItem(this.activeKey, hostUrl);
+			localStorage.setItem('rocket.chat.currentHost', hostUrl);
 			this.emit('active-setted', url);
 			return true;
 		}
@@ -218,7 +200,7 @@ class Servers extends EventEmitter {
 	}
 
 	clearActive() {
-		localStorage.removeItem(this.activeKey);
+		localStorage.removeItem('rocket.chat.currentHost');
 		this.emit('active-cleared');
 		return true;
 	}
@@ -250,7 +232,7 @@ class Servers extends EventEmitter {
 		return site;
 	}
 	showHostConfirmation(host) {
-		return remote.dialog.showMessageBox({
+		return dialog.showMessageBox({
 			type: 'question',
 			buttons: [i18n.__('Add'), i18n.__('Cancel')],
 			defaultId: 0,
@@ -261,13 +243,13 @@ class Servers extends EventEmitter {
 				this.validateHost(host)
 					.then(() => this.addHost(host))
 					.then(() => this.setActive(host))
-					.catch(() => remote.dialog.showErrorBox(i18n.__('Invalid_Host'), i18n.__('Host_not_validated', host)));
+					.catch(() => dialog.showErrorBox(i18n.__('Invalid_Host'), i18n.__('Host_not_validated', host)));
 			}
 		});
 	}
 
 	resetAppData() {
-		const response = remote.dialog.showMessageBox({
+		const response = dialog.showMessageBox({
 			type: 'question',
 			buttons: ['Yes', 'Cancel'],
 			defaultId: 1,
@@ -283,6 +265,20 @@ class Servers extends EventEmitter {
 		ipcRenderer.send('reset-app-data');
 	}
 
+	initialize() {
+		this.load();
+		const processProtocol = this.getProtocolUrlFromProcess(process.argv);
+		if (processProtocol) {
+			this.showHostConfirmation(processProtocol);
+		}
+		ipcRenderer.on('add-host', (e, host) => {
+			if (this.hostExists(host)) {
+				this.setActive(host);
+			} else {
+				this.showHostConfirmation(host);
+			}
+		});
+	}
 }
 
-export default new Servers();
+export default new Servers;

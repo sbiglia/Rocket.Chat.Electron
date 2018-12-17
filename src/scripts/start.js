@@ -160,5 +160,11 @@ export const start = function() {
 		}
 	});
 
+	servers.initialize();
+	webview.initialize();
+	sidebar.initialize();
+
 	attachEvents();
+
+	servers.restoreActive();
 };

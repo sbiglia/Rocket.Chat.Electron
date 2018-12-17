@@ -1,59 +1,32 @@
-import { EventEmitter } from 'events';
 import { remote } from 'electron';
+import { EventEmitter } from 'events';
 import i18n from '../i18n/index.js';
 import servers from './servers';
-import webview from './webview';
+const { getCurrentWindow, Menu } = remote;
+
+
+const createMenuTemplate = ({ hostUrl }, events) => [
+	{
+		label: i18n.__('Reload_server'),
+		click: () => events.emit('reload-server', hostUrl),
+	},
+	{
+		label: i18n.__('Remove_server'),
+		click: () => events.emit('remove-server', hostUrl),
+	},
+	{
+		type: 'separator',
+	},
+	{
+		label: i18n.__('Open DevTools'),
+		click: () => events.emit('open-devtools-for-server', hostUrl),
+	},
+];
+
 
 class SideBar extends EventEmitter {
 	constructor() {
 		super();
-
-		this.sortOrder = JSON.parse(localStorage.getItem(this.sortOrderKey)) || [];
-		localStorage.setItem(this.sortOrderKey, JSON.stringify(this.sortOrder));
-
-		this.listElement = document.getElementById('sidebar__servers');
-
-		Object.values(servers.hosts)
-			.sort((a, b) => this.sortOrder.indexOf(a.url) - this.sortOrder.indexOf(b.url))
-			.forEach((host) => {
-				this.add(host);
-			});
-
-		servers.on('host-added', (hostUrl) => {
-			this.add(servers.get(hostUrl));
-		});
-
-		servers.on('host-removed', (hostUrl) => {
-			this.remove(hostUrl);
-		});
-
-		servers.on('active-setted', (hostUrl) => {
-			this.setActive(hostUrl);
-		});
-
-		servers.on('active-cleared', (hostUrl) => {
-			this.deactiveAll(hostUrl);
-		});
-
-		servers.on('title-setted', (hostUrl, title) => {
-			this.setLabel(hostUrl, title);
-		});
-
-		webview.on('dom-ready', (hostUrl) => {
-			this.setActive(localStorage.getItem(servers.activeKey));
-			webview.getActive().send('request-sidebar-color');
-			this.setImage(hostUrl);
-			if (this.isHidden()) {
-				this.hide();
-			} else {
-				this.show();
-			}
-		});
-
-	}
-
-	get sortOrderKey() {
-		return 'rocket.chat.sortOrder';
 	}
 
 	add(host) {
@@ -147,7 +120,7 @@ class SideBar extends EventEmitter {
 				})
 				.forEach((sideBarElement) => {
 					this.sortOrder = newSortOrder;
-					localStorage.setItem(this.sortOrderKey, JSON.stringify(this.sortOrder));
+					localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.sortOrder));
 
 					const url = sideBarElement.dataset.host;
 					const host = { url, title: sideBarElement.querySelector('div.tooltip').innerHTML };
@@ -163,7 +136,7 @@ class SideBar extends EventEmitter {
 		};
 
 		this.listElement.appendChild(item);
-		this.emit('hosts-sorted');
+		this.emit('servers-sorted');
 	}
 
 	setImage(hostUrl) {
@@ -208,7 +181,6 @@ class SideBar extends EventEmitter {
 		if (item) {
 			item.classList.add('active');
 		}
-		webview.getActive().send && webview.getActive().send('request-sidebar-color');
 	}
 
 	deactiveAll() {
@@ -307,64 +279,42 @@ class SideBar extends EventEmitter {
 		}
 		return false;
 	}
-}
 
-export default new SideBar();
-
-
-let selectedInstance = null;
-const instanceMenu = remote.Menu.buildFromTemplate([{
-	label: i18n.__('Reload_server'),
-	click() {
-		webview.getByUrl(selectedInstance.dataset.host).reload();
-	},
-}, {
-	label: i18n.__('Remove_server'),
-	click() {
-		servers.removeHost(selectedInstance.dataset.host);
-	},
-}, {
-	label: i18n.__('Open DevTools'),
-	click() {
-		webview.getByUrl(selectedInstance.dataset.host).openDevTools();
-	},
-}]);
-
-window.addEventListener('contextmenu', function(e) {
-	if (e.target.classList.contains('instance') || e.target.parentNode.classList.contains('instance')) {
-		e.preventDefault();
-		if (e.target.classList.contains('instance')) {
-			selectedInstance = e.target;
-		} else {
-			selectedInstance = e.target.parentNode;
-		}
-
-		instanceMenu.popup(remote.getCurrentWindow());
+	setKeyboardShortcutsVisible(visible) {
+		document.querySelector('.sidebar').classList[visible ? 'add' : 'remove']('command-pressed');
 	}
-}, false);
 
-if (process.platform === 'darwin') {
-	window.addEventListener('keydown', function(e) {
-		if (e.key === 'Meta') {
-			document.getElementsByClassName('sidebar')[0].classList.add('command-pressed');
-		}
-	});
+	initialize() {
+		this.sortOrder = JSON.parse(localStorage.getItem('rocket.chat.sortOrder')) || [];
+		localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.sortOrder));
 
-	window.addEventListener('keyup', function(e) {
-		if (e.key === 'Meta') {
-			document.getElementsByClassName('sidebar')[0].classList.remove('command-pressed');
-		}
-	});
-} else {
-	window.addEventListener('keydown', function(e) {
-		if (e.key === 'ctrlKey') {
-			document.getElementsByClassName('sidebar')[0].classList.add('command-pressed');
-		}
-	});
+		this.listElement = document.getElementById('sidebar__servers');
 
-	window.addEventListener('keyup', function(e) {
-		if (e.key === 'ctrlKey') {
-			document.getElementsByClassName('sidebar')[0].classList.remove('command-pressed');
-		}
-	});
+		Object.values(servers.hosts)
+			.sort((a, b) => this.sortOrder.indexOf(a.url) - this.sortOrder.indexOf(b.url))
+			.forEach((host) => {
+				this.add(host);
+			});
+
+		window.addEventListener('contextmenu', (e) => {
+			if (e.target.classList.contains('instance') || e.target.parentNode.classList.contains('instance')) {
+				e.preventDefault();
+
+				let selectedInstance = null;
+				if (e.target.classList.contains('instance')) {
+					selectedInstance = e.target;
+				} else {
+					selectedInstance = e.target.parentNode;
+				}
+
+				const template = createMenuTemplate({ hostUrl: selectedInstance.dataset.host }, this);
+				const menu = Menu.buildFromTemplate(template);
+
+				menu.popup(getCurrentWindow());
+			}
+		}, false);
+	}
 }
+
+
+export default new SideBar;

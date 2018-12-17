@@ -1,44 +1,11 @@
+import { ipcRenderer } from 'electron';
 import { EventEmitter } from 'events';
 import servers from './servers';
-import sidebar from './sidebar';
-import { ipcRenderer } from 'electron';
+
 
 class WebView extends EventEmitter {
 	constructor() {
 		super();
-
-		this.webviewParentElement = document.body;
-
-		servers.forEach((host) => {
-			this.add(host);
-		});
-
-		servers.on('host-added', (hostUrl) => {
-			this.add(servers.get(hostUrl));
-		});
-
-		servers.on('host-removed', (hostUrl) => {
-			this.remove(hostUrl);
-		});
-
-		servers.on('active-setted', (hostUrl) => {
-			this.setActive(hostUrl);
-		});
-
-		servers.on('active-cleared', (hostUrl) => {
-			this.deactiveAll(hostUrl);
-		});
-
-		servers.once('loaded', () => {
-			this.loaded();
-		});
-
-		ipcRenderer.on('screenshare-result', (e, id) => {
-			const webviewObj = this.getActive();
-			webviewObj.executeJavaScript(`
-				window.parent.postMessage({ sourceId: '${ id }' }, '*');
-			`);
-		});
 	}
 
 	loaded() {
@@ -68,7 +35,16 @@ class WebView extends EventEmitter {
 		});
 
 		webviewObj.addEventListener('console-message', (e) => {
-			console.log('webview:', e.message);
+			const { level, line, message, sourceId } = e;
+			const levelFormatting = {
+				[-1]: 'color: #999',
+				0: 'color: #666',
+				1: 'color: #990',
+				2: 'color: #900',
+			}[level];
+			const danglingFormatting = (message.match(/%c/g) || []).map(() => '');
+			console.log(`%c${ host.url }\t%c${ message }\n${ sourceId } : ${ line }`,
+				'font-weight: bold', levelFormatting, ...danglingFormatting);
 		});
 
 		webviewObj.addEventListener('ipc-message', (event) => {
@@ -77,9 +53,6 @@ class WebView extends EventEmitter {
 			switch (event.channel) {
 				case 'title-changed':
 					servers.setHostTitle(host.url, event.args[0]);
-					break;
-				case 'unread-changed':
-					sidebar.setBadge(host.url, event.args[0]);
 					break;
 				case 'focus':
 					servers.setActive(host.url);
@@ -92,9 +65,6 @@ class WebView extends EventEmitter {
 					const server = active.getAttribute('server');
 					this.loading();
 					active.loadURL(server);
-					break;
-				case 'sidebar-background':
-					sidebar.changeSidebarColor(event.args[0]);
 					break;
 			}
 		});
@@ -187,6 +157,22 @@ class WebView extends EventEmitter {
 	goForward() {
 		this.getActive().goForward();
 	}
+
+	initialize() {
+		this.webviewParentElement = document.body;
+
+		servers.forEach((host) => {
+			this.add(host);
+		});
+
+		ipcRenderer.on('screenshare-result', (e, id) => {
+			const webviewObj = this.getActive();
+			webviewObj.executeJavaScript(`
+				window.parent.postMessage({ sourceId: '${ id }' }, '*');
+			`);
+		});
+	}
 }
 
-export default new WebView();
+
+export default new WebView;
