@@ -304,6 +304,10 @@ class Menus extends EventEmitter {
 		this.state = {};
 	}
 
+	destroy() {
+		this.removeAllListeners();
+	}
+
 	setState(partialState) {
 		this.state = {
 			...this.state,

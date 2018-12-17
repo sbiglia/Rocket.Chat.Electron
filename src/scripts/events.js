@@ -3,13 +3,19 @@ import dock from './dock';
 import menus from './menus';
 import servers from './servers';
 import sidebar from './sidebar';
+import tray from './tray';
 import webview from './webview';
-
-
 const { app, getCurrentWindow } = remote;
-const { certificate, tray } = remote.require('./background');
+const { certificate } = remote.require('./background');
+
 
 export default () => {
+	window.addEventListener('beforeunload', () => {
+		tray.destroy();
+		menus.destroy();
+		dock.destroy();
+	});
+
 	menus.on('quit', () => app.quit());
 	menus.on('about', () => ipcRenderer.send('open-about-dialog'));
 	menus.on('open-url', (url) => shell.openExternal(url));
@@ -59,9 +65,6 @@ export default () => {
 	menus.on('reload-app', () => {
 		const mainWindow = getCurrentWindow();
 		mainWindow.removeAllListeners();
-		menus.removeAllListeners();
-		tray.destroy();
-		dock.destroy();
 		mainWindow.reload();
 	});
 

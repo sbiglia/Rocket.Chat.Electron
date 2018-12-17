@@ -9,7 +9,6 @@ import certificate from './background/certificate';
 import { addServer, getMainWindow } from './background/mainWindow';
 import './background/notifications';
 import './background/screenshareDialog';
-import tray from './background/tray';
 import './background/updateDialog';
 import './background/updates';
 
@@ -17,7 +16,7 @@ import i18n from './i18n/index.js';
 
 export { default as icon } from './background/icon';
 export { default as remoteServers } from './background/servers';
-export { certificate, tray };
+export { certificate };
 
 
 process.env.GOOGLE_API_KEY = 'AIzaSyADqUh_c1Qhji3Cp1NE43YrcpuPkmhXD-c';
@@ -74,6 +73,10 @@ if (process.platform === 'linux') {
 
 ipcMain.on('getSystemIdleTime', (event) => {
 	event.returnValue = idle.getIdleTime();
+});
+
+ipcMain.on('log', (event, ...args) => {
+	console.log.apply(console, args);
 });
 
 process.on('unhandledRejection', console.error.bind(console));
