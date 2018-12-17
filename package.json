@@ -13,8 +13,8 @@
     "url": "https://github.com/RocketChat/Rocket.Chat.Electron.git"
   },
   "scripts": {
-		"postinstall": "electron-builder install-app-deps",
-		"postremove": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps",
+    "postremove": "electron-builder install-app-deps",
     "start": "gulp start",
     "build": "gulp build-app",
     "changelog": "conventional-changelog --config .github/changelog.js -i HISTORY.md -s",
