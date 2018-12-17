@@ -9,17 +9,41 @@ const { app, getCurrentWindow } = remote;
 const { certificate } = remote.require('./background');
 
 
-export default () => {
-	window.addEventListener('beforeunload', () => {
-		tray.destroy();
-		menus.destroy();
-		dock.destroy();
+const updatePreferences = () => {
+	const mainWindow = getCurrentWindow();
+
+	menus.setState({
+		showTrayIcon: localStorage.getItem('hideTray') ?
+			localStorage.getItem('hideTray') !== 'true' : (process.platform !== 'linux'),
+		showUserStatusInTray: (localStorage.getItem('showUserStatusInTray') || 'true') === 'true',
+		showFullScreen: mainWindow.isFullScreen(),
+		showWindowOnUnreadChanged: localStorage.getItem('showWindowOnUnreadChanged') === 'true',
+		showMenuBar: localStorage.getItem('autohideMenu') !== 'true',
+		showServerList: localStorage.getItem('sidebar-closed') !== 'true',
 	});
 
+	tray.setState({
+		showIcon: localStorage.getItem('hideTray') ?
+			localStorage.getItem('hideTray') !== 'true' : (process.platform !== 'linux'),
+		showUserStatus: (localStorage.getItem('showUserStatusInTray') || 'true') === 'true',
+	});
+};
+
+const updateServers = () => {
+	menus.setState({
+		servers: Object.values(servers.hosts)
+			.sort((a, b) => (sidebar ? (sidebar.sortOrder.indexOf(a.url) - sidebar.sortOrder.indexOf(b.url)) : 0))
+			.map(({ title, url }) => ({ title, url })),
+		currentServerUrl: servers.active,
+	});
+};
+
+const updateWindowState = () => tray.setState({ isMainWindowVisible: getCurrentWindow().isVisible() });
+
+const attachMenusEvents = () => {
 	menus.on('quit', () => app.quit());
 	menus.on('about', () => ipcRenderer.send('open-about-dialog'));
 	menus.on('open-url', (url) => shell.openExternal(url));
-
 
 	menus.on('add-new-server', () => {
 		getCurrentWindow().show();
@@ -57,10 +81,8 @@ export default () => {
 		}
 	});
 
-
 	menus.on('go-back', () => webview.goBack());
 	menus.on('go-forward', () => webview.goForward());
-
 
 	menus.on('reload-app', () => {
 		const mainWindow = getCurrentWindow();
@@ -71,27 +93,6 @@ export default () => {
 	menus.on('toggle-devtools', () => getCurrentWindow().toggleDevTools());
 
 	menus.on('reset-app-data', () => servers.resetAppData());
-
-
-	const updatePreferences = () => {
-		const mainWindow = getCurrentWindow();
-
-		menus.setState({
-			showTrayIcon: localStorage.getItem('hideTray') ?
-				localStorage.getItem('hideTray') !== 'true' : (process.platform !== 'linux'),
-			showUserStatusInTray: (localStorage.getItem('showUserStatusInTray') || 'true') === 'true',
-			showFullScreen: mainWindow.isFullScreen(),
-			showWindowOnUnreadChanged: localStorage.getItem('showWindowOnUnreadChanged') === 'true',
-			showMenuBar: localStorage.getItem('autohideMenu') !== 'true',
-			showServerList: localStorage.getItem('sidebar-closed') !== 'true',
-		});
-
-		tray.setState({
-			showIcon: localStorage.getItem('hideTray') ?
-				localStorage.getItem('hideTray') !== 'true' : (process.platform !== 'linux'),
-			showUserStatus: (localStorage.getItem('showUserStatusInTray') || 'true') === 'true',
-		});
-	};
 
 	menus.on('toggle', (property) => {
 		switch (property) {
@@ -137,44 +138,36 @@ export default () => {
 
 		updatePreferences();
 	});
+};
 
-	const updateServers = () => {
-		menus.setState({
-			servers: Object.values(servers.hosts)
-				.sort((a, b) => (sidebar ? (sidebar.sortOrder.indexOf(a.url) - sidebar.sortOrder.indexOf(b.url)) : 0))
-				.map(({ title, url }) => ({ title, url })),
-			currentServerUrl: servers.active,
-		});
-	};
-
+const attachServersEvents = () => {
 	servers.on('loaded', updateServers);
 	servers.on('active-cleared', updateServers);
 	servers.on('active-setted', updateServers);
 	servers.on('host-added', updateServers);
 	servers.on('host-removed', updateServers);
 	servers.on('title-setted', updateServers);
-	sidebar.on('hosts-sorted', updateServers);
+};
 
+const attachSidebarEvents = () => {
+	sidebar.on('hosts-sorted', updateServers);
 
 	sidebar.on('badge-setted', () => {
 		const badge = sidebar.getGlobalBadge();
 		tray.setState({ badge });
 		dock.setState({ badge });
 	});
+};
 
-
-	const updateWindowState = () =>
-		tray.setState({ isMainWindowVisible: getCurrentWindow().isVisible() });
-	getCurrentWindow().on('hide', updateWindowState);
-	getCurrentWindow().on('show', updateWindowState);
-
-	tray.on('created', () => getCurrentWindow().emit('set-state', { hideOnClose: true }));
-	tray.on('destroyed', () => getCurrentWindow().emit('set-state', { hideOnClose: false }));
-	tray.on('set-main-window-visibility', (visible) =>
-		(visible ? getCurrentWindow().show() : getCurrentWindow().hide()));
+const attachTrayEvents = () => {
+	const mainWindow = getCurrentWindow();
+	tray.on('created', () => mainWindow.emit('set-state', { hideOnClose: true }));
+	tray.on('destroyed', () => mainWindow.emit('set-state', { hideOnClose: false }));
+	tray.on('set-main-window-visibility', (visible) => (visible ? mainWindow.show() : mainWindow.hide()));
 	tray.on('quit', () => app.quit());
+};
 
-
+const attachWebviewEvents = () => {
 	webview.on('ipc-message-unread-changed', (hostUrl, [count]) => {
 		if (typeof count === 'number' && localStorage.getItem('showWindowOnUnreadChanged') === 'true') {
 			const mainWindow = remote.getCurrentWindow();
@@ -191,11 +184,35 @@ export default () => {
 		tray.setState({ status });
 		dock.setState({ status });
 	});
+};
 
+const attachMainWindowEvents = () => {
+	getCurrentWindow().on('hide', updateWindowState);
+	getCurrentWindow().on('show', updateWindowState);
+};
+
+export default () => {
+	window.addEventListener('beforeunload', () => {
+		try {
+			tray.destroy();
+			menus.destroy();
+			dock.destroy();
+			getCurrentWindow().removeListener('hide', updateWindowState);
+			getCurrentWindow().removeListener('show', updateWindowState);
+		} catch (error) {
+			ipcRenderer.send('log', error);
+		}
+	});
+
+	attachMenusEvents();
+	attachServersEvents();
+	attachSidebarEvents();
+	attachTrayEvents();
+	attachWebviewEvents();
+	attachMainWindowEvents();
 
 	servers.restoreActive();
 	updatePreferences();
 	updateServers();
 	updateWindowState();
-
 };
