@@ -1,9 +1,9 @@
 import { remote } from 'electron';
 import { EventEmitter } from 'events';
+import icon from './icon';
 import i18n from '../i18n/index.js';
 import { enqueue } from '../helpers';
 const { Menu, Tray: TrayIcon } = remote;
-const { icon } = remote.require('./background');
 
 
 const getIconStyle = ({ badge: { title, count }, status, showUserStatus }) => {

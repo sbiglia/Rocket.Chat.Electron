@@ -1,22 +1,6 @@
-import { BrowserWindow, nativeImage } from 'electron';
-import jetpack from 'fs-jetpack';
-import { whenReadyToShow } from './utils';
+import { remote } from 'electron';
+const { nativeImage } = remote;
 
-let rendererWindow = null;
-
-const getRendererWindow = async() => {
-	if (!rendererWindow) {
-		rendererWindow = new BrowserWindow({ show: false });
-
-		const dataURL = `data:text/html,<!doctype html>
-		${ jetpack.read(`${ __dirname }/public/images/icon.svg`) }`;
-
-		rendererWindow.loadURL(dataURL);
-		await whenReadyToShow(rendererWindow);
-	}
-
-	return rendererWindow;
-};
 
 /* istanbul ignore next */
 const renderInWindow = async(style) => {
@@ -87,6 +71,7 @@ const renderInWindow = async(style) => {
 		pixelRatio,
 	})));
 	svg.remove();
+
 	return images;
 };
 
@@ -98,9 +83,7 @@ const render = async(style = {}) => {
 		return render.cache[encodedArgs];
 	}
 
-	const rendererWindow = await getRendererWindow();
-	const jsCode = `(${ renderInWindow.toString() })(${ encodedArgs })`;
-	const images = await rendererWindow.webContents.executeJavaScript(jsCode);
+	const images = await renderInWindow(style);
 	const image = nativeImage.createEmpty();
 	for (const { dataURL, size, pixelRatio } of images) {
 		image.addRepresentation({

@@ -14,7 +14,6 @@ import './background/updates';
 
 import i18n from './i18n/index.js';
 
-export { default as icon } from './background/icon';
 export { default as remoteServers } from './background/servers';
 export { certificate };
 

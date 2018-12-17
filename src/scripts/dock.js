@@ -1,7 +1,7 @@
 import { remote } from 'electron';
 import { EventEmitter } from 'events';
+import icon from './icon';
 const { app, getCurrentWindow } = remote;
-const { icon } = remote.require('./background');
 
 
 const getBadgeText = ({ badge: { title, count } }) => {
@@ -57,13 +57,11 @@ class Dock extends EventEmitter {
 		}
 
 		if (process.platform === 'linux') {
-			mainWindow.setIcon(await icon.render({
+			const renderedIcon = await icon.render({
 				badgeText,
-				size: {
-					win32: [256, 128, 64, 48, 32, 24, 16],
-					linux: 128,
-				}[process.platform],
-			}));
+				size: 128,
+			});
+			mainWindow.setIcon(renderedIcon);
 		}
 
 		if (!mainWindow.isFocused()) {
