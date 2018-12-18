@@ -46,13 +46,15 @@ const attachMenusEvents = () => {
 	menus.on('open-url', (url) => shell.openExternal(url));
 
 	menus.on('add-new-server', () => {
-		getCurrentWindow().show();
+		const mainWindow = getCurrentWindow();
+		mainWindow.show();
 		servers.clearActive();
 		webview.showLanding();
 	});
 
 	menus.on('select-server', ({ url }) => {
-		getCurrentWindow().show();
+		const mainWindow = getCurrentWindow();
+		mainWindow.show();
 		servers.setActive(url);
 	});
 
@@ -86,11 +88,13 @@ const attachMenusEvents = () => {
 
 	menus.on('reload-app', () => {
 		const mainWindow = getCurrentWindow();
-		mainWindow.removeAllListeners();
 		mainWindow.reload();
 	});
 
-	menus.on('toggle-devtools', () => getCurrentWindow().toggleDevTools());
+	menus.on('toggle-devtools', () => {
+		const mainWindow = getCurrentWindow();
+		mainWindow.toggleDevTools();
+	});
 
 	menus.on('reset-app-data', () => servers.resetAppData());
 
@@ -206,7 +210,7 @@ const attachWebviewEvents = () => {
 		sidebar.setBadge(hostUrl, badge);
 
 		if (typeof badge === 'number' && localStorage.getItem('showWindowOnUnreadChanged') === 'true') {
-			const mainWindow = remote.getCurrentWindow();
+			const mainWindow = getCurrentWindow();
 			if (!mainWindow.isFocused()) {
 				mainWindow.once('focus', () => mainWindow.flashFrame(false));
 				mainWindow.showInactive();
@@ -237,22 +241,26 @@ const attachWebviewEvents = () => {
 };
 
 const attachMainWindowEvents = () => {
-	getCurrentWindow().on('hide', updateWindowState);
-	getCurrentWindow().on('show', updateWindowState);
+	const mainWindow = getCurrentWindow();
+	mainWindow.on('hide', updateWindowState);
+	mainWindow.on('show', updateWindowState);
+};
+
+const destroyAll = () => {
+	try {
+		tray.destroy();
+		menus.destroy();
+		dock.destroy();
+		const mainWindow = getCurrentWindow();
+		mainWindow.removeListener('hide', updateWindowState);
+		mainWindow.removeListener('show', updateWindowState);
+	} catch (error) {
+		ipcRenderer.send('log', error);
+	}
 };
 
 export default () => {
-	window.addEventListener('beforeunload', () => {
-		try {
-			tray.destroy();
-			menus.destroy();
-			dock.destroy();
-			getCurrentWindow().removeListener('hide', updateWindowState);
-			getCurrentWindow().removeListener('show', updateWindowState);
-		} catch (error) {
-			ipcRenderer.send('log', error);
-		}
-	});
+	window.addEventListener('beforeunload', destroyAll);
 
 	window.addEventListener('keydown', (e) => {
 		if (e.key === 'Control' || e.key === 'Meta') {
