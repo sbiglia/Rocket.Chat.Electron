@@ -7,25 +7,24 @@ import webview from './webview';
 import i18n from '../i18n/index.js';
 
 
-export const start = function() {
+const setupI18n = () => {
+	document.querySelector('.add-server .tooltip').innerHTML = i18n.__('Add new server');
+	document.querySelector('#login-card .connect__prompt').innerHTML = i18n.__('Enter_your_server_URL');
+	document.querySelector('#login-card #invalidUrl').innerHTML = i18n.__('No_valid_server_found');
+	document.querySelector('#login-card .connect__error').innerHTML = i18n.__('Check_connection');
+	document.querySelector('#login-card .login').innerHTML = i18n.__('Connect');
+};
+
+const attachConnectionStateEvents = () => {
+	const handleOnline = () => document.body.classList.remove('offline');
+	const handleOffline = () => document.body.classList.add('offline');
+	window.addEventListener('online', handleOnline);
+	window.addEventListener('offline', handleOffline);
+	navigator.onLine ? handleOnline() : handleOffline();
+};
+
+const attachRegisterFormEvents = () => {
 	const defaultInstance = 'https://open.rocket.chat';
-
-	// connection check
-	function online() {
-		document.body.classList.remove('offline');
-	}
-
-	function offline() {
-		document.body.classList.add('offline');
-	}
-
-	if (!navigator.onLine) {
-		offline();
-	}
-
-	window.addEventListener('online', online);
-	window.addEventListener('offline', offline);
-	// end connection check
 
 	const form = document.querySelector('form');
 	const hostField = form.querySelector('[name="host"]');
@@ -33,8 +32,6 @@ export const start = function() {
 	const invalidUrl = form.querySelector('#invalidUrl');
 
 	window.addEventListener('load', () => hostField.focus());
-
-	window.addEventListener('focus', () => webview.focusActive());
 
 	function validateHost() {
 		return new Promise(function(resolve, reject) {
@@ -147,11 +144,15 @@ export const start = function() {
 		submit();
 		return false;
 	});
+};
 
-	document.querySelector('.add-server').addEventListener('click', () => {
-		servers.clearActive();
-		webview.showLanding();
-	});
+export default () => {
+
+	setupI18n();
+	attachConnectionStateEvents();
+	attachRegisterFormEvents();
+
+	window.addEventListener('focus', () => webview.focusActive());
 
 	document.addEventListener('click', (event) => {
 		const anchorElement = event.target.closest('a[rel="noopener noreferrer"]');
@@ -161,15 +162,17 @@ export const start = function() {
 		}
 	});
 
-	servers.initialize();
-	webview.initialize();
-	sidebar.initialize();
+	window.addEventListener('load', () => {
+		servers.initialize();
+		webview.initialize();
+		sidebar.initialize();
 
-	attachEvents();
+		attachEvents();
 
-	if (process.platform === 'darwin') {
-		setupTouchBar();
-	}
+		if (process.platform === 'darwin') {
+			setupTouchBar();
+		}
 
-	servers.restoreActive();
+		servers.restoreActive();
+	});
 };

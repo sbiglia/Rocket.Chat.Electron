@@ -184,6 +184,11 @@ const attachServersEvents = () => {
 };
 
 const attachSidebarEvents = () => {
+	sidebar.on('add-server', () => {
+		servers.clearActive();
+		webview.showLanding();
+	});
+
 	sidebar.on('servers-sorted', updateServers);
 
 	sidebar.on('badge-setted', () => {

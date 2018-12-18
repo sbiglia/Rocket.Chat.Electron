@@ -1,3 +1,7 @@
-import { start } from './scripts/start';
+import main from './scripts/main';
 
-start();
+switch (document.currentScript.dataset.page) {
+	case 'main':
+	default:
+		main();
+}

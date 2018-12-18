@@ -313,6 +313,8 @@ class SideBar extends EventEmitter {
 				menu.popup(getCurrentWindow());
 			}
 		}, false);
+
+		document.querySelector('.add-server').addEventListener('click', () => this.emit('add-server'));
 	}
 }
 
