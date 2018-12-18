@@ -2,6 +2,7 @@ import { ipcRenderer, shell } from 'electron';
 import attachEvents from './events';
 import servers from './servers';
 import sidebar from './sidebar';
+import setupTouchBar from './touchBar';
 import webview from './webview';
 import i18n from '../i18n/index.js';
 
@@ -165,6 +166,10 @@ export const start = function() {
 	sidebar.initialize();
 
 	attachEvents();
+
+	if (process.platform === 'darwin') {
+		setupTouchBar();
+	}
 
 	servers.restoreActive();
 };

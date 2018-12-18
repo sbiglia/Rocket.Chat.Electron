@@ -3,7 +3,6 @@ import dock from './dock';
 import menus from './menus';
 import servers from './servers';
 import sidebar from './sidebar';
-import setTouchBar from './touchBar';
 import tray from './tray';
 import webview from './webview';
 const { app, getCurrentWindow } = remote;
@@ -273,10 +272,6 @@ export default () => {
 	attachTrayEvents();
 	attachWebviewEvents();
 	attachMainWindowEvents();
-
-	if (process.platform === 'darwin') {
-		setTouchBar();
-	}
 
 	updatePreferences();
 	updateServers();
