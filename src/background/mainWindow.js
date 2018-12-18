@@ -80,7 +80,7 @@ export const getMainWindow = async() => {
 	if (!mainWindow) {
 		mainWindow = new BrowserWindow(mainWindowOptions);
 		mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
-		mainWindow.loadURL(`file://${ __dirname }/public/app.html`);
+		mainWindow.loadFile(`${ __dirname }/public/main.html`);
 		attachWindowStateHandling(mainWindow);
 
 		if (env.name === 'development') {

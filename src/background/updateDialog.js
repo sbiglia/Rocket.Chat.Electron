@@ -1,18 +1,17 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { getMainWindow } from './mainWindow';
-import i18n from '../i18n/index.js';
 
 
 let updateWindow;
 
 const openUpdateDialog = async({ currentVersion = app.getVersion(), newVersion } = {}) => {
 	if (updateWindow) {
+		updateWindow.show();
 		return;
 	}
 
 	const mainWindow = await getMainWindow();
 	updateWindow = new BrowserWindow({
-		title: i18n.__('Update_Available'),
 		parent: mainWindow,
 		modal: process.platform !== 'darwin',
 		width: 600,
@@ -27,17 +26,13 @@ const openUpdateDialog = async({ currentVersion = app.getVersion(), newVersion }
 	});
 	updateWindow.setMenuBarVisibility(false);
 
-	updateWindow.once('ready-to-show', () => {
-		updateWindow.show();
-	});
-
 	updateWindow.once('closed', () => {
 		updateWindow = null;
 	});
 
 	updateWindow.params = { currentVersion, newVersion };
 
-	updateWindow.loadFile(`${ __dirname }/public/update-dialog.html`);
+	updateWindow.loadFile(`${ __dirname }/public/update.html`);
 };
 
 const closeUpdateDialog = () => {
