@@ -3,6 +3,7 @@ import dock from './dock';
 import menus from './menus';
 import servers from './servers';
 import sidebar from './sidebar';
+import setTouchBar from './touchBar';
 import tray from './tray';
 import webview from './webview';
 const { app, getCurrentWindow } = remote;
@@ -207,8 +208,7 @@ const attachWebviewEvents = () => {
 
 		if (typeof badge === 'number' && localStorage.getItem('showWindowOnUnreadChanged') === 'true') {
 			const mainWindow = remote.getCurrentWindow();
-			const isNeededToShow = !mainWindow.isFocused() || (mainWindow.isFocused() && !mainWindow.isVisible());
-			if (isNeededToShow) {
+			if (!mainWindow.isFocused()) {
 				mainWindow.once('focus', () => mainWindow.flashFrame(false));
 				mainWindow.showInactive();
 				mainWindow.flashFrame(true);
@@ -273,6 +273,10 @@ export default () => {
 	attachTrayEvents();
 	attachWebviewEvents();
 	attachMainWindowEvents();
+
+	if (process.platform === 'darwin') {
+		setTouchBar();
+	}
 
 	updatePreferences();
 	updateServers();
