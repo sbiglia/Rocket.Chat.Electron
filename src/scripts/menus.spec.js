@@ -1,10 +1,16 @@
 /* eslint-env node, mocha */
-import { Menu } from 'electron';
-import { expect } from 'chai';
-import sinon from 'sinon';
+import { remote } from 'electron';
+import { expect, spy, use } from 'chai';
+import spies from 'chai-spies';
 import menus from './menus';
+const { Menu } = remote;
+
 
 describe('menus', () => {
+	before(() => {
+		use(spies);
+	});
+
 	let menu;
 
 	beforeEach(async() => {
@@ -17,9 +23,10 @@ describe('menus', () => {
 	});
 
 	it('should update on set state', () => {
-		sinon.spy(menus, 'update');
+		spy.on(menus, 'update');
 		menus.setState({});
-		expect(menus.update.calledOnce).to.be.true;
+		expect(menus.update).to.have.been.called;
+		spy.restore(menus, 'update');
 	});
 
 	const itShouldHaveAnItem = (id, which) => it(`should have an item "${ id }"`, () => {
@@ -28,17 +35,17 @@ describe('menus', () => {
 		which && which(item);
 	});
 
-	itShouldHaveAnItem('quit', (item) => {
-		const spy = sinon.spy();
-		menus.on('quit', spy);
+	itShouldHaveAnItem('quit', async(item) => {
+		const cb = spy();
+		menus.on('quit', cb);
 		item.click();
-		expect(spy.called).to.be.true;
+		expect(cb).to.have.been.called;
 	});
 
 	itShouldHaveAnItem('about', (item) => {
-		const spy = sinon.spy();
-		menus.on('about', spy);
+		const cb = spy();
+		menus.on('about', cb);
 		item.click();
-		expect(spy.called).to.be.true;
+		expect(cb).to.have.been.called;
 	});
 });

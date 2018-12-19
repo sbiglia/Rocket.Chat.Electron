@@ -14,7 +14,6 @@
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "postremove": "electron-builder install-app-deps",
     "start": "gulp start",
     "build": "gulp build-app",
     "changelog": "conventional-changelog --config .github/changelog.js -i HISTORY.md -s",
@@ -46,6 +45,7 @@
     "@rocket.chat/eslint-config": "^0.1.2",
     "builtin-modules": "^3.0.0",
     "chai": "^4.2.0",
+    "chai-spies": "^1.0.0",
     "conventional-changelog-cli": "^2.0.11",
     "electron": "^3.0.10",
     "electron-builder": "^20.38.2",
@@ -70,7 +70,6 @@
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-replace": "^2.1.0",
     "run-sequence": "^2.2.1",
-    "sinon": "^7.1.1",
     "spectron": "^5.0.0",
     "xvfb-maybe": "^0.2.1"
   },
