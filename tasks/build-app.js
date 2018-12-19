@@ -5,7 +5,6 @@ const less = require('gulp-less');
 const plumber = require('gulp-plumber');
 const watch = require('gulp-watch');
 const bundle = require('./bundle');
-const { env } = require('./utils');
 
 
 gulp.task('public', () => gulp.src('src/public/**/*')
@@ -28,10 +27,7 @@ gulp.task('less', () => gulp.src('src/stylesheets/main.less')
 	.pipe(less())
 	.pipe(gulp.dest('app/stylesheets')));
 
-gulp.task('environment', () => file('env.json', JSON.stringify({ name: env }), { src: true })
-	.pipe(gulp.dest('app')));
-
-gulp.task('build-app', ['public', 'i18n', 'bundle', 'less', 'environment']);
+gulp.task('build-app', ['public', 'i18n', 'bundle', 'less']);
 
 gulp.task('watch', () => {
 	const run = (taskName) => batch((event, done) => gulp.start(taskName, done));

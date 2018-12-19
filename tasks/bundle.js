@@ -6,8 +6,9 @@ const commonjs = require('rollup-plugin-commonjs');
 const istanbul = require('rollup-plugin-istanbul');
 const json = require('rollup-plugin-json');
 const nodeResolve = require('rollup-plugin-node-resolve');
+const replace = require('rollup-plugin-replace');
+const { env } = require('./utils');
 const appManifest = require('../package.json');
-
 
 const cached = {};
 
@@ -29,6 +30,9 @@ const bundle = async(src, dest, { coverage = false, rollupPlugins = [] } = {}) =
 				}),
 			] : []),
 			json(),
+			replace({
+				'process.env.NODE_ENV': JSON.stringify(env),
+			}),
 			nodeResolve(),
 			commonjs(),
 		],
