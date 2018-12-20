@@ -134,6 +134,8 @@ const createLinkMenuTemplate = ({
 );
 
 const createDefaultMenuTemplate = ({
+	selectionText,
+	linkText,
 	editFlags: {
 		canUndo = false,
 		canRedo = false,
@@ -182,6 +184,16 @@ const createDefaultMenuTemplate = ({
 		accelerator: 'CommandOrControl+A',
 		enabled: canSelectAll,
 	},
+	{
+		type: 'separator',
+	},
+	...(selectionText && !linkText ? [
+		{
+			label: i18n.__('Services'),
+			role: 'services',
+			submenu: [],
+		},
+	] : []),
 ];
 
 const createMenuTemplate = async(params) => [
