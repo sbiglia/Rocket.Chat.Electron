@@ -1,6 +1,7 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 
 const getNodeEnv = ({ production, tests, e2e } = {}) => (
@@ -111,7 +112,12 @@ module.exports = (env) => [
 				{
 					test: /\.less$/,
 					use: [
-						'style-loader',
+						{
+							loader: 'style-loader',
+							options: {
+								singleton: true,
+							},
+						},
 						'css-loader',
 						'less-loader',
 					],
@@ -128,6 +134,10 @@ module.exports = (env) => [
 			new webpack.DefinePlugin({
 				'process.env.NODE_ENV': JSON.stringify(getNodeEnv(env)),
 			}),
+			new CopyWebpackPlugin([
+				{ from: './src/public', to: './public' },
+				{ from: './src/i18n/lang', to: './i18n/lang' },
+			]),
 		],
 		target: 'electron-renderer',
 		node: {

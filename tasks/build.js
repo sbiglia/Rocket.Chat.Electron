@@ -23,26 +23,13 @@ const bundle = async({ env = { [require('./utils').env]: true } } = {}) => {
 	await new Promise((resolve, reject) => bundling.run(cb(resolve, reject)));
 };
 
-gulp.task('public', () => gulp.src('src/public/**/*')
-	.pipe(plumber())
-	.pipe(gulp.dest('app/public')));
-
-gulp.task('i18n', () => gulp.src('src/i18n/lang/**/*')
-	.pipe(plumber())
-	.pipe(gulp.dest('app/i18n/lang')));
-
-gulp.task('bundle', async() => {
+gulp.task('build-app', async() => {
 	await bundle();
 });
 
-gulp.task('build-app', ['public', 'i18n', 'bundle']);
-
 gulp.task('watch', () => {
 	const run = (taskName) => batch((event, done) => gulp.start(taskName, done));
-
-	watch('src/public/**/*', run('public'));
-	watch('src/i18n/lang/**/*', run('i18n'));
-	watch('src/**/*.js', run('bundle'));
+	watch('src/**/*.js', run('build-app'));
 });
 
 gulp.task('build-unit-tests', ['build-app'], async() => {

@@ -87,7 +87,7 @@ class WebView extends EventEmitter {
 
 		this.webviewParentElement.appendChild(webviewObj);
 
-		webviewObj.src = host.lastPath || host.url;
+		webviewObj.src = `file://${ __dirname }/loading-error.html`; // host.lastPath || host.url;
 	}
 
 	remove(hostUrl) {
