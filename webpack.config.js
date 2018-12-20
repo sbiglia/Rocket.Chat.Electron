@@ -108,6 +108,20 @@ module.exports = (env) => [
 						] : []),
 					],
 				},
+				{
+					test: /\.less$/,
+					use: [
+						'style-loader',
+						'css-loader',
+						'less-loader',
+					],
+				},
+				{
+					test: /\.(woff2?|ttf|eot|svg|jpe?g|png|gif|mp4|mov|ogg|webm)(\?.*)?$/,
+					use: [
+						'file-loader',
+					],
+				},
 			],
 		},
 		plugins: [
