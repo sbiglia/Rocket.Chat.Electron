@@ -1,11 +1,28 @@
 const gulp = require('gulp');
 const batch = require('gulp-batch');
-const file = require('gulp-file');
 const less = require('gulp-less');
 const plumber = require('gulp-plumber');
 const watch = require('gulp-watch');
-const bundle = require('./bundle');
+const webpack = require('webpack');
 
+
+const bundle = async({ env = { [require('./utils').env]: true } } = {}) => {
+	const config = require('../webpack.config')(env, process.argv);
+
+	const bundling = webpack(config);
+
+	const cb = (resolve, reject) => (err, stats) => {
+		if (err) {
+			reject(err);
+			return;
+		}
+
+		console.log(stats.toString({ colors: true }));
+		resolve(stats);
+	};
+
+	await new Promise((resolve, reject) => bundling.run(cb(resolve, reject)));
+};
 
 gulp.task('public', () => gulp.src('src/public/**/*')
 	.pipe(plumber())
@@ -15,12 +32,9 @@ gulp.task('i18n', () => gulp.src('src/i18n/lang/**/*')
 	.pipe(plumber())
 	.pipe(gulp.dest('app/i18n/lang')));
 
-gulp.task('bundle', () => Promise.all([
-	bundle('src/background.js', 'app/background.js'),
-	bundle('src/app.js', 'app/app.js'),
-	bundle('src/i18n/index.js', 'app/i18n/index.js'),
-	bundle('src/preload.js', 'app/preload.js'),
-]));
+gulp.task('bundle', async() => {
+	await bundle();
+});
 
 gulp.task('less', () => gulp.src('src/stylesheets/main.less')
 	.pipe(plumber())
@@ -36,4 +50,16 @@ gulp.task('watch', () => {
 	watch('src/i18n/lang/**/*', run('i18n'));
 	watch('src/**/*.js', run('bundle'));
 	watch('src/**/*.less', run('less'));
+});
+
+gulp.task('build-unit-tests', ['build-app'], async() => {
+	await bundle({ env: { tests: true } });
+});
+
+gulp.task('build-coverage-tests', ['build-app'], async() => {
+	await bundle({ env: { tests: true, coverage: true } });
+});
+
+gulp.task('build-e2e-tests', ['build-app'], async() => {
+	await bundle({ env: { e2e: true } });
 });

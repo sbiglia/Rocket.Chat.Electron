@@ -24,13 +24,6 @@ export async function startApp() {
 	await app.start();
 	await app.client.waitUntilWindowLoaded();
 
-	for (let i = 0; i < (await app.client.windowHandles()).value.length; ++i) {
-		await app.client.windowByIndex(i);
-		if (await app.browserWindow.isVisible()) {
-			break;
-		}
-	}
-
 	logFetchInterval = setInterval(fetchLogs, 100);
 }
 
