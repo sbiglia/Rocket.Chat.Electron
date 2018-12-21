@@ -230,6 +230,7 @@ class Servers extends EventEmitter {
 		}
 		return site;
 	}
+
 	showHostConfirmation(host) {
 		return dialog.showMessageBox({
 			type: 'question',

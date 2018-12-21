@@ -41,6 +41,7 @@ const bundle = async(src, dest, { coverage = false, rollupPlugins = [] } = {}) =
 	const outputOptions = {
 		format: 'cjs',
 		file: dest,
+		exports: 'named',
 		intro: '(function () {',
 		outro: '})()',
 		sourcemap: true,

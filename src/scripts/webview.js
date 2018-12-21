@@ -93,6 +93,9 @@ class WebView extends EventEmitter {
 	remove(hostUrl) {
 		const el = this.getByUrl(hostUrl);
 		if (el) {
+			el.getWebContents().session.clearStorageData({
+				origin: hostUrl,
+			});
 			el.remove();
 		}
 	}
