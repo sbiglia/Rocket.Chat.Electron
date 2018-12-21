@@ -11,11 +11,22 @@
 
 	<div class="sidebar sidebar--hidden">
 		<div class="sidebar__wrapper">
-			<ul id="sidebar__servers">
+			<template class="sidebar__server-template">
+				<li data-host="" data-sort-order="" server="" class="sidebar__server instance" draggable="true">
+					<span class="sidebar__server-initials"></span>
+					<span class="sidebar__server-tooltip tooltip"></span>
+					<span class="sidebar__server-badge badge"></span>
+					<img class="sidebar__server-favicon" src="" />
+					<div class="sidebar__server-hotkey name"></div>
+				</li>
+			</template>
+
+			<ul class="sidebar__list sidebar__servers">
 			</ul>
-			<ul>
-				<li class="add-server">
-					<span>+</span>
+
+			<ul class="sidebar__list">
+				<li class="sidebar__add-server">
+					<span class="sidebar__label">+</span>
 					<div class="tooltip">Add new server</div>
 				</li>
 			</ul>

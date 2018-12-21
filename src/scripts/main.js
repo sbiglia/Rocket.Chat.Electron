@@ -8,7 +8,6 @@ import i18n from '../i18n/index.js';
 
 
 const setupI18n = () => {
-	document.querySelector('.add-server .tooltip').innerHTML = i18n.__('Add new server');
 	document.querySelector('#login-card .connect__prompt').innerHTML = i18n.__('Enter_your_server_URL');
 	document.querySelector('#login-card #invalidUrl').innerHTML = i18n.__('No_valid_server_found');
 	document.querySelector('#login-card .connect__error').innerHTML = i18n.__('Check_connection');
