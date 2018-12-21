@@ -14,8 +14,9 @@ const openAboutDialog = async() => {
 	aboutWindow = new BrowserWindow({
 		parent: mainWindow,
 		modal: process.platform !== 'darwin',
-		width: 400,
-		height: 300,
+		width: 480,
+		height: 360,
+		useContentSize: true,
 		type: 'toolbar',
 		resizable: false,
 		fullscreenable: false,

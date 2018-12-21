@@ -16,6 +16,7 @@ const openUpdateDialog = async({ currentVersion = app.getVersion(), newVersion }
 		modal: process.platform !== 'darwin',
 		width: 600,
 		height: 330,
+		useContentSize: true,
 		type: 'toolbar',
 		resizable: false,
 		fullscreenable: false,
@@ -36,7 +37,7 @@ const openUpdateDialog = async({ currentVersion = app.getVersion(), newVersion }
 };
 
 const closeUpdateDialog = () => {
-	updateWindow.destroy();
+	updateWindow && updateWindow.destroy();
 };
 
 ipcMain.on('open-update-dialog', (e, ...args) => openUpdateDialog(...args));

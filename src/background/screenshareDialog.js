@@ -15,6 +15,7 @@ const openScreenshareDialog = async() => {
 		parent: mainWindow,
 		width: 776,
 		height: 600,
+		useContentSize: true,
 		type: 'toolbar',
 		resizable: false,
 		fullscreenable: false,
