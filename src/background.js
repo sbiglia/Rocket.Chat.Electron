@@ -2,7 +2,6 @@ import { app, ipcMain, Menu } from 'electron';
 import querystring from 'querystring';
 import url from 'url';
 import idle from '@paulcbetts/system-idle-time';
-
 import './background/aboutDialog';
 import appData from './background/appData';
 import certificate from './background/certificate';
@@ -10,11 +9,9 @@ import { addServer, getMainWindow } from './background/mainWindow';
 import './background/notifications';
 import './background/screenshareDialog';
 import './background/updateDialog';
+import './background/servers';
 import './background/updates';
-
 import i18n from './i18n/index.js';
-
-export { default as servers } from './background/servers';
 export { certificate };
 
 

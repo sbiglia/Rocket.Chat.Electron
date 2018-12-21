@@ -1,23 +1,25 @@
-import { app } from 'electron';
+import { app, ipcMain } from 'electron';
 
-let servers = {};
 
-export default {
-	loadServers(s) {
-		servers = s;
-	},
+class Servers {
+	constructor() {
+		this.servers = {};
 
-	getServers() {
-		return servers;
-	},
-};
-
-app.on('login', function(event, webContents, request, authInfo, callback) {
-	for (const url of Object.keys(servers)) {
-		const server = servers[url];
-		if (request.url.indexOf(url) === 0 && server.username) {
-			callback(server.username, server.password);
-			break;
-		}
+		app.on('login', this.handleLogin.bind(this));
+		ipcMain.on('update-servers', (event, servers) => {
+			event.returnValue = this.update(servers);
+		});
 	}
-});
+
+	update(servers) {
+		this.servers = servers;
+	}
+
+	handleLogin(event, webContents, request, authInfo, callback) {
+		Object.entries(this.servers)
+			.filter(([url, { username }]) => (request.url.indexOf(url) === 0 && username))
+			.forEach(([, { username, password }]) => callback(username, password));
+	}
+}
+
+export default new Servers;

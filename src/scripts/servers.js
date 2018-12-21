@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import jetpack from 'fs-jetpack';
 import i18n from '../i18n/index.js';
 const { dialog, process } = remote;
-const { servers: remoteServers } = remote.require('./background');
 
 
 class Servers extends EventEmitter {
@@ -86,7 +85,7 @@ class Servers extends EventEmitter {
 		}
 
 		this._hosts = hosts;
-		remoteServers.loadServers(this._hosts);
+		ipcRenderer.sendSync('update-servers', this._hosts);
 		this.emit('loaded');
 	}
 
@@ -152,7 +151,7 @@ class Servers extends EventEmitter {
 		};
 		this.hosts = hosts;
 
-		remoteServers.loadServers(this.hosts);
+		ipcRenderer.sendSync('update-servers', this.hosts);
 
 		this.emit('host-added', hostUrl);
 
@@ -165,7 +164,7 @@ class Servers extends EventEmitter {
 			delete hosts[hostUrl];
 			this.hosts = hosts;
 
-			remoteServers.loadServers(this.hosts);
+			ipcRenderer.sendSync('update-servers', this.hosts);
 
 			if (this.active === hostUrl) {
 				this.clearActive();
@@ -280,5 +279,6 @@ class Servers extends EventEmitter {
 		});
 	}
 }
+
 
 export default new Servers;
