@@ -166,8 +166,8 @@ class SideBar extends EventEmitter {
 	changeSidebarColor({ color, background }) {
 		const sidebar = document.querySelector('.sidebar');
 		if (sidebar) {
-			sidebar.style.background = background;
-			sidebar.style.color = color;
+			sidebar.style.background = background || '';
+			sidebar.style.color = color || '';
 		}
 	}
 

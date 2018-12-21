@@ -7,18 +7,22 @@
 	<script defer src="../app.js" data-page="main"></script>
 </head>
 <body class="app-page app-page--loading">
+	<div class="drag-region"></div>
+
 	<div class="sidebar sidebar--hidden">
-		<ul id="sidebar__servers">
-		</ul>
-		<ul>
-			<li class="add-server">
-				<span>+</span>
-				<div class="tooltip">Add new server</div>
-			</li>
-		</ul>
+		<div class="sidebar__wrapper">
+			<ul id="sidebar__servers">
+			</ul>
+			<ul>
+				<li class="add-server">
+					<span>+</span>
+					<div class="tooltip">Add new server</div>
+				</li>
+			</ul>
+		</div>
 	</div>
 
-	<section class="landing-page">
+	<section class="landing">
 		<div class="wrapper">
 			<header>
 				<img class="logo" src="./images/logo-dark.svg" />
@@ -50,8 +54,6 @@
 			</form>
 		</div>
 	</section>
-
-	<div class="drag-region"></div>
 
 	<svg id="icon" viewBox="0 0 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 		<defs>

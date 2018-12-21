@@ -120,12 +120,12 @@ class WebView extends EventEmitter {
 		while (!(item = this.getActive()) === false) {
 			item.classList.remove('active');
 		}
-		document.querySelector('.landing-page').classList.add('hide');
+		document.querySelector('.landing').classList.add('hide');
 	}
 
 	showLanding() {
 		this.loaded();
-		document.querySelector('.landing-page').classList.remove('hide');
+		document.querySelector('.landing').classList.remove('hide');
 	}
 
 	setActive(hostUrl) {
