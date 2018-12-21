@@ -30,18 +30,26 @@ class SideBar extends EventEmitter {
 	}
 
 	add(host) {
-		const template = document.querySelector('.sidebar__server-template');
-		const serverView = document.importNode(template.content, true);
-		const item = serverView.querySelector('.sidebar__server');
-		const initials = serverView.querySelector('.sidebar__server-initials');
-		const tooltip = serverView.querySelector('.sidebar__server-tooltip');
-		const img = serverView.querySelector('.sidebar__server-favicon');
-		const hotkey = serverView.querySelector('.sidebar__server-hotkey');
-
 		let name = host.title.replace(/^https?:\/\/(?:www\.)?([^\/]+)(.*)/, '$1');
 		name = name.split('.');
 		name = name[0][0] + (name[1] ? name[1][0] : '');
 		name = name.toUpperCase();
+
+		const initials = document.createElement('span');
+		initials.innerHTML = name;
+
+		const tooltip = document.createElement('div');
+		tooltip.classList.add('tooltip');
+		tooltip.innerHTML = host.title;
+
+		const badge = document.createElement('div');
+		badge.classList.add('badge');
+
+		const img = document.createElement('img');
+		img.onload = function() {
+			img.style.display = 'initial';
+			initials.style.display = 'none';
+		};
 
 		let hostOrder = 0;
 		if (this.sortOrder.includes(host.url)) {
@@ -51,19 +59,27 @@ class SideBar extends EventEmitter {
 			this.sortOrder.push(host.url);
 		}
 
-		initials.textContent = name;
-		tooltip.textContent = host.title;
+		const hotkey = document.createElement('div');
+		hotkey.classList.add('name');
+		if (process.platform === 'darwin') {
+			hotkey.innerHTML = `⌘${ hostOrder }`;
+		} else {
+			hotkey.innerHTML = `^${ hostOrder }`;
+		}
 
-		img.onload = () => {
-			initials.style.display = 'none';
-			img.style.display = 'initial';
-		};
-
-		hotkey.textContent = `${ process.platform === 'darwin' ? '⌘' : '^' }${ hostOrder }`;
+		const item = document.createElement('li');
+		item.appendChild(initials);
+		item.appendChild(tooltip);
+		item.appendChild(badge);
+		item.appendChild(img);
+		item.appendChild(hotkey);
 
 		item.dataset.host = host.url;
 		item.dataset.sortOrder = hostOrder;
 		item.setAttribute('server', host.url);
+		item.classList.add('instance');
+
+		item.setAttribute('draggable', true);
 
 		item.ondragstart = (event) => {
 			window.dragged = event.target.nodeName !== 'LI' ? event.target.closest('li') : event.target;
@@ -107,7 +123,7 @@ class SideBar extends EventEmitter {
 					localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.sortOrder));
 
 					const url = sideBarElement.dataset.host;
-					const host = { url, title: sideBarElement.querySelector('.tooltip').innerHTML };
+					const host = { url, title: sideBarElement.querySelector('div.tooltip').innerHTML };
 					this.add(host);
 					this.setImage(url);
 				});
@@ -272,7 +288,7 @@ class SideBar extends EventEmitter {
 		this.sortOrder = JSON.parse(localStorage.getItem('rocket.chat.sortOrder')) || [];
 		localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.sortOrder));
 
-		this.listElement = document.querySelector('.sidebar .sidebar__servers');
+		this.listElement = document.getElementById('sidebar__servers');
 
 		Object.values(servers.hosts)
 			.sort((a, b) => this.sortOrder.indexOf(a.url) - this.sortOrder.indexOf(b.url))
@@ -298,8 +314,7 @@ class SideBar extends EventEmitter {
 			}
 		}, false);
 
-		document.querySelector('.sidebar__add-server .tooltip').innerHTML = i18n.__('Add new server');
-		document.querySelector('.sidebar__add-server').addEventListener('click', () => this.emit('add-server'));
+		document.querySelector('.add-server').addEventListener('click', () => this.emit('add-server'));
 	}
 }
 
