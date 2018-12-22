@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import { EventEmitter } from 'events';
 import querystring from 'querystring';
 import url from 'url';
@@ -136,6 +136,10 @@ class Servers extends EventEmitter {
 		if (this.active === host.url) {
 			this.clearActive();
 		}
+
+		remote.getCurrentWebContents().session.clearStorageData({
+			origin: host.url,
+		});
 	}
 
 	persist() {
