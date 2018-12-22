@@ -1,4 +1,4 @@
-import { ipcRenderer, shell } from 'electron';
+import { ipcRenderer } from 'electron';
 import attachEvents from './events';
 import servers from './servers';
 import sidebar from './sidebar';
@@ -8,7 +8,6 @@ import i18n from '../i18n/index.js';
 
 
 const setupI18n = () => {
-	document.querySelector('.add-server .tooltip').innerHTML = i18n.__('Add new server');
 	document.querySelector('#login-card .connect__prompt').innerHTML = i18n.__('Enter_your_server_URL');
 	document.querySelector('#login-card #invalidUrl').innerHTML = i18n.__('No_valid_server_found');
 	document.querySelector('#login-card .connect__error').innerHTML = i18n.__('Check_connection');
@@ -146,20 +145,9 @@ const attachRegisterFormEvents = () => {
 };
 
 export default () => {
-
 	setupI18n();
 	attachConnectionStateEvents();
 	attachRegisterFormEvents();
-
-	window.addEventListener('focus', () => webview.focusActive());
-
-	document.addEventListener('click', (event) => {
-		const anchorElement = event.target.closest('a[rel="noopener noreferrer"]');
-		if (anchorElement) {
-			shell.openExternal(anchorElement.href);
-			event.preventDefault();
-		}
-	});
 
 	window.addEventListener('load', () => {
 		servers.load();

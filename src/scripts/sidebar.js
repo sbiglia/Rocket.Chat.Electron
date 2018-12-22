@@ -1,7 +1,7 @@
 import { remote } from 'electron';
 import { EventEmitter } from 'events';
-import i18n from '../i18n/index.js';
 import servers from './servers';
+import i18n from '../i18n/index.js';
 const { getCurrentWindow, Menu } = remote;
 
 
@@ -27,6 +27,8 @@ const createMenuTemplate = ({ hostUrl }, events) => [
 class SideBar extends EventEmitter {
 	constructor() {
 		super();
+
+		this.sortOrder = [];
 	}
 
 	add(host) {
@@ -46,7 +48,8 @@ class SideBar extends EventEmitter {
 		badge.classList.add('badge');
 
 		const img = document.createElement('img');
-		img.onload = function() {
+		img.src = `${ host.url.replace(/\/$/, '') }/assets/favicon.svg?v=${ Math.round(Math.random() * 10000) }`;
+		img.onload = () => {
 			img.style.display = 'initial';
 			initials.style.display = 'none';
 		};
@@ -120,12 +123,10 @@ class SideBar extends EventEmitter {
 				})
 				.forEach((sideBarElement) => {
 					this.sortOrder = newSortOrder;
-					localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.sortOrder));
 
 					const url = sideBarElement.dataset.host;
 					const host = { url, title: sideBarElement.querySelector('div.tooltip').innerHTML };
 					this.add(host);
-					this.setImage(url);
 				});
 
 			this.setActive(window.dragged.dataset.host);
@@ -135,13 +136,8 @@ class SideBar extends EventEmitter {
 			servers.setActive(host);
 		};
 
-		this.listElement.appendChild(item);
-		this.emit('servers-sorted');
-	}
-
-	setImage(hostUrl) {
-		const img = this.getByUrl(hostUrl).querySelector('img');
-		img.src = `${ hostUrl.replace(/\/$/, '') }/assets/favicon.svg?v=${ Math.round(Math.random() * 10000) }`;
+		document.querySelector('#sidebar__servers').appendChild(item);
+		this.emit('servers-sorted', this.sortOrder);
 	}
 
 	remove(hostUrl) {
@@ -152,15 +148,15 @@ class SideBar extends EventEmitter {
 	}
 
 	getByUrl(hostUrl) {
-		return this.listElement.querySelector(`.instance[server="${ hostUrl }"]`);
+		return document.querySelector(`#sidebar__servers .instance[server="${ hostUrl }"]`);
 	}
 
 	getActive() {
-		return this.listElement.querySelector('.instance.active');
+		return document.querySelector('#sidebar__servers .instance.active');
 	}
 
 	isActive(hostUrl) {
-		return !!this.listElement.querySelector(`.instance.active[server="${ hostUrl }"]`);
+		return !!document.querySelector(`#sidebar__servers .instance.active[server="${ hostUrl }"]`);
 	}
 
 	changeSidebarColor({ color, background }) {
@@ -191,7 +187,7 @@ class SideBar extends EventEmitter {
 	}
 
 	setLabel(hostUrl, label) {
-		this.listElement.querySelector(`.instance[server="${ hostUrl }"] .tooltip`).innerHTML = label;
+		document.querySelector(`#sidebar__servers .instance[server="${ hostUrl }"] .tooltip`).innerHTML = label;
 	}
 
 	setBadge(hostUrl, badge) {
@@ -216,7 +212,7 @@ class SideBar extends EventEmitter {
 	getGlobalBadge() {
 		let count = 0;
 		let title = '';
-		const instanceEls = this.listElement.querySelectorAll('li.instance');
+		const instanceEls = document.querySelectorAll('#sidebar__servers li.instance');
 		for (let i = instanceEls.length - 1; i >= 0; i--) {
 			const instanceEl = instanceEls[i];
 			const text = instanceEl.querySelector('.badge').innerHTML;
@@ -285,16 +281,9 @@ class SideBar extends EventEmitter {
 	}
 
 	initialize() {
-		this.sortOrder = JSON.parse(localStorage.getItem('rocket.chat.sortOrder')) || [];
-		localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.sortOrder));
-
-		this.listElement = document.getElementById('sidebar__servers');
-
-		Object.values(servers.hosts)
-			.sort((a, b) => this.sortOrder.indexOf(a.url) - this.sortOrder.indexOf(b.url))
-			.forEach((host) => {
-				this.add(host);
-			});
+		servers.ordered.forEach((host) => {
+			this.add(host);
+		});
 		this.setActive(servers.active);
 
 		window.addEventListener('contextmenu', (e) => {
@@ -316,6 +305,7 @@ class SideBar extends EventEmitter {
 		}, false);
 
 		document.querySelector('.add-server').addEventListener('click', () => this.emit('add-server'));
+		document.querySelector('.add-server .tooltip').innerHTML = i18n.__('Add new server');
 	}
 }
 

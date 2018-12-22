@@ -32,7 +32,7 @@ export class SelectServerPanel {
 	}
 
 	_setHostsArray() {
-		this._hosts = Object.values(servers.hosts).map((value) => ({ label: value.title, host: value.url }));
+		this._hosts = servers.ordered.map((value) => ({ label: value.title, host: value.url }));
 		this._hosts = this._trimHostsNames(this._hosts);
 	}
 

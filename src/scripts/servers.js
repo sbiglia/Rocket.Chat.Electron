@@ -45,18 +45,20 @@ class Servers extends EventEmitter {
 
 	add(...urls) {
 		return this.parseUrls(urls)
-			.map((host) => {
+			.forEach((host) => {
+				if (this.hosts[host.url]) {
+					return;
+				}
+
 				this.hosts = { ...this.hosts, [host.url]: host };
 				this.persist();
 				this.emit('host-added', host);
-
-				return host;
 			});
 	}
 
 	parseUrls(urls) {
 		return urls.map((ref) => {
-			const parsed = url.parse(ref);
+			const parsed = url.parse(ref.replace(/\/$/, ''));
 
 			if (parsed.protocol) {
 				return parsed;
@@ -142,13 +144,35 @@ class Servers extends EventEmitter {
 		});
 	}
 
+	get ordered() {
+		const hosts = Object.values(this.hosts);
+		return hosts.sort(({ order: a = hosts.length }, { order: b = hosts.length }) => a - b);
+	}
+
+	sort(orderedUrls) {
+		if (!Array.isArray(orderedUrls)) {
+			return;
+		}
+
+		orderedUrls.forEach((url, i) => {
+			this.hosts[url].order = i;
+		});
+
+		this.persist();
+		this.emit('sorted', this.ordered);
+	}
+
 	persist() {
 		localStorage.setItem('rocket.chat.hosts', JSON.stringify(this.hosts));
+
 		if (this.active) {
 			localStorage.setItem('rocket.chat.currentHost', this.active);
 		} else {
 			localStorage.removeItem('rocket.chat.currentHost');
 		}
+
+		localStorage.setItem('rocket.chat.sortOrder', JSON.stringify(this.ordered.map(({ url }) => url)));
+
 		ipcRenderer.sendSync('update-servers', this.hosts);
 	}
 
@@ -170,9 +194,31 @@ class Servers extends EventEmitter {
 			}, {});
 		}
 
-		if (Object.keys(this.hosts).length === 0) {
+		if (Object.values(this.hosts).length === 0) {
 			this.hosts = ipcRenderer.sendSync('get-default-servers');
 		}
+
+		for (const [url, host] of Object.entries(this.hosts)) {
+			if (url !== host.url) {
+				delete this.hosts[url];
+				this.hosts[host.url] = host;
+			}
+		}
+
+		try {
+			const orderedUrls = JSON.parse(localStorage.getItem('rocket.chat.sortOrder'));
+			Array.isArray(orderedUrls) && orderedUrls.forEach((url, i) => {
+				this.hosts[url].order = i;
+			});
+		} catch (error) {
+			for (const host of Object.values(this.hosts)) {
+				delete host.order;
+			}
+		}
+
+		this.ordered.forEach((host, i) => {
+			host.order = i;
+		});
 
 		this.active = localStorage.getItem('rocket.chat.currentHost');
 

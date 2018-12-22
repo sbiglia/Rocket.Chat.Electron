@@ -79,10 +79,8 @@ class WebView extends EventEmitter {
 		}
 	}
 
-	saveLastPath(hostUrl, lastPathUrl) {
-		const { hosts } = servers;
-		hosts[hostUrl].lastPath = lastPathUrl;
-		servers.hosts = hosts;
+	saveLastPath(url, lastPath) {
+		servers.update({ url, lastPath });
 	}
 
 	getByUrl(hostUrl) {
@@ -143,7 +141,7 @@ class WebView extends EventEmitter {
 	initialize() {
 		this.webviewParentElement = document.body;
 
-		Object.values(servers.hosts).forEach((host) => {
+		servers.ordered.forEach((host) => {
 			this.add(host);
 		});
 
