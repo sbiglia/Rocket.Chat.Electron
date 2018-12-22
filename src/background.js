@@ -1,11 +1,9 @@
 import { app, ipcMain, Menu } from 'electron';
-import querystring from 'querystring';
-import url from 'url';
 import idle from '@paulcbetts/system-idle-time';
 import './background/aboutDialog';
 import appData from './background/appData';
 import certificate from './background/certificate';
-import { addServer, getMainWindow } from './background/mainWindow';
+import { getMainWindow } from './background/mainWindow';
 import './background/notifications';
 import './background/screenshareDialog';
 import './background/updateDialog';
@@ -37,24 +35,6 @@ const unsetDefaultApplicationMenu = () => {
 	Menu.setApplicationMenu(Menu.buildFromTemplate(emptyMenuTemplate));
 };
 
-const parseProtocolUrls = (args) =>
-	args.filter((arg) => /^rocketchat:\/\/./.test(arg))
-		.map((uri) => url.parse(uri))
-		.map(({ hostname, pathname, query }) => {
-			const { insecure } = querystring.parse(query);
-			return `${ insecure === 'true' ? 'http' : 'https' }://${ hostname }${ pathname || '' }`;
-		});
-
-const addServers = async(protocolUrls) => {
-	parseProtocolUrls(protocolUrls).forEach((serverUrl) => addServer(serverUrl));
-};
-
-// macOS only
-app.on('open-url', (event, url) => {
-	event.preventDefault();
-	addServers([url]);
-});
-
 app.on('window-all-closed', () => {
 	app.quit();
 });
@@ -78,12 +58,18 @@ ipcMain.on('log', (event, ...args) => {
 
 process.on('unhandledRejection', console.error.bind(console));
 
+app.on('open-url', async(event, url) => {
+	event.preventDefault();
+	const mainWindow = await getMainWindow();
+	mainWindow.send('add-host', url);
+});
 
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (gotTheLock) {
 	app.on('second-instance', async(event, argv) => {
-		addServers(argv.slice(2));
+		const mainWindow = await getMainWindow();
+		mainWindow.send('add-host', ...argv.slice(2));
 	});
 
 	app.on('ready', async() => {

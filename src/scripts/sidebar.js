@@ -132,7 +132,7 @@ class SideBar extends EventEmitter {
 		};
 
 		item.onclick = () => {
-			servers.setActive(host.url);
+			servers.setActive(host);
 		};
 
 		this.listElement.appendChild(item);
@@ -295,6 +295,7 @@ class SideBar extends EventEmitter {
 			.forEach((host) => {
 				this.add(host);
 			});
+		this.setActive(servers.active);
 
 		window.addEventListener('contextmenu', (e) => {
 			if (e.target.classList.contains('instance') || e.target.parentNode.classList.contains('instance')) {

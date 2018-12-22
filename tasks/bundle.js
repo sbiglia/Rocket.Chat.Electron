@@ -36,6 +36,16 @@ const bundle = async(src, dest, { coverage = false, rollupPlugins = [] } = {}) =
 			nodeResolve(),
 			commonjs(),
 		],
+		onwarn({ loc, frame, message }) {
+			if (loc) {
+				console.warn(`${ loc.file } (${ loc.line }:${ loc.column }) ${ message }`);
+				if (frame) {
+					console.warn(frame);
+				}
+			} else {
+				console.warn(message);
+			}
+		},
 	};
 
 	const outputOptions = {

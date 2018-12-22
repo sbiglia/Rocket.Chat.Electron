@@ -5,7 +5,8 @@ import servers from './servers';
 import sidebar from './sidebar';
 import tray from './tray';
 import webview from './webview';
-const { app, getCurrentWindow } = remote;
+import { __ } from '../i18n';
+const { app, dialog, getCurrentWindow } = remote;
 const { certificate } = remote.require('./background');
 
 
@@ -48,15 +49,13 @@ const attachMenusEvents = () => {
 	menus.on('add-new-server', () => {
 		const mainWindow = getCurrentWindow();
 		mainWindow.show();
-		sidebar.changeSidebarColor({});
 		servers.clearActive();
-		webview.showLanding();
 	});
 
 	menus.on('select-server', ({ url }) => {
 		const mainWindow = getCurrentWindow();
 		mainWindow.show();
-		servers.setActive(url);
+		servers.setActive({ url });
 	});
 
 	menus.on('reload-server', ({ ignoringCache = false, clearCertificates = false } = {}) => {
@@ -97,7 +96,22 @@ const attachMenusEvents = () => {
 		mainWindow.toggleDevTools();
 	});
 
-	menus.on('reset-app-data', () => servers.resetAppData());
+	menus.on('reset-app-data', () => {
+		dialog.showMessageBox({
+			type: 'question',
+			buttons: ['Yes', 'Cancel'],
+			defaultId: 1,
+			title: __('Reset app data'),
+			message: __('This will sign you out from all your teams and reset the app back to its original settings. ' +
+				'This cannot be undone.'),
+		}, (response) => {
+			if (response !== 0) {
+				return;
+			}
+
+			ipcRenderer.send('reset-app-data');
+		});
+	});
 
 	menus.on('toggle', (property) => {
 		switch (property) {
@@ -147,48 +161,68 @@ const attachMenusEvents = () => {
 
 const attachServersEvents = () => {
 	servers.on('loaded', () => {
+		if (Object.keys(servers.hosts).length === 1) {
+			localStorage.setItem('sidebar-closed', 'true');
+		}
+
 		webview.loaded();
 		updateServers();
 	});
 
-	servers.on('active-cleared', (hostUrl) => {
-		webview.deactiveAll(hostUrl);
-		sidebar.deactiveAll(hostUrl);
+	servers.on('host-rejected', (host) => {
+		dialog.showErrorBox(__('Invalid_Host'), __('Host_not_validated', host.url));
+	});
+
+	servers.on('host-requested', (host, cb) => {
+		dialog.showMessageBox({
+			title: __('Add_Server'),
+			message: __('Add_host_to_servers', host.url),
+			type: 'question',
+			buttons: [__('Add'), __('Cancel')],
+			defaultId: 0,
+		}, (response) => cb(response === 0));
+	});
+
+	servers.on('active-cleared', () => {
+		webview.deactiveAll();
+		sidebar.deactiveAll();
+		sidebar.changeSidebarColor({});
+		webview.showLanding();
 		updateServers();
 	});
 
-	servers.on('active-setted', (hostUrl) => {
-		webview.setActive(hostUrl);
-		sidebar.setActive(hostUrl);
+	servers.on('active-setted', ({ url } = {}) => {
+		webview.setActive(url);
+		sidebar.setActive(url);
 
-		webview.getActive().send && webview.getActive().send('request-sidebar-color');
+		webview.getActive() && webview.getActive().send && webview.getActive().send('request-sidebar-color');
 
 		updateServers();
 	});
 
-	servers.on('host-added', (hostUrl) => {
-		webview.add(servers.get(hostUrl));
-		sidebar.add(servers.get(hostUrl));
+	servers.on('host-added', (host) => {
+		webview.add(host);
+		sidebar.add(host);
+		sidebar.setActive(host.url);
+		webview.setActive(host.url);
 		updateServers();
 	});
 
-	servers.on('host-removed', (hostUrl) => {
-		webview.remove(hostUrl);
-		sidebar.remove(hostUrl);
+	servers.on('host-removed', (host) => {
+		webview.remove(host.url);
+		sidebar.remove(host.url);
 		updateServers();
 	});
 
-	servers.on('title-setted', (hostUrl, title) => {
-		sidebar.setLabel(hostUrl, title);
+	servers.on('title-setted', (host) => {
+		sidebar.setLabel(host.url, host.title);
 		updateServers();
 	});
 };
 
 const attachSidebarEvents = () => {
 	sidebar.on('add-server', () => {
-		sidebar.changeSidebarColor({});
 		servers.clearActive();
-		webview.showLanding();
 	});
 
 	sidebar.on('servers-sorted', updateServers);
@@ -200,7 +234,7 @@ const attachSidebarEvents = () => {
 	});
 
 	sidebar.on('reload-server', (hostUrl) => webview.getByUrl(hostUrl).reload());
-	sidebar.on('remove-server', (hostUrl) => servers.removeHost(hostUrl));
+	sidebar.on('remove-server', (hostUrl) => servers.remove({ url: hostUrl }));
 	sidebar.on('open-devtools-for-server', (hostUrl) => webview.getByUrl(hostUrl).openDevTools());
 };
 
@@ -235,9 +269,26 @@ const attachWebviewEvents = () => {
 		sidebar.changeSidebarColor(color);
 	});
 
+	webview.on('ipc-message-title-changed', (url, [title]) => {
+		servers.update({ url, title });
+	});
+
+	webview.on('ipc-message-focus', (url) => {
+		servers.setActive({ url });
+	});
+
+	webview.on('ipc-message-get-sourceId', () => {
+		ipcRenderer.send('open-screenshare-dialog');
+	});
+
+	webview.on('ipc-message-reload-server', () => {
+		const active = webview.getActive();
+		const server = active.getAttribute('server');
+		webview.loading();
+		active.loadURL(server);
+	});
+
 	webview.on('dom-ready', (hostUrl) => {
-		sidebar.setActive(localStorage.getItem('rocket.chat.currentHost'));
-		webview.getActive().send('request-sidebar-color');
 		sidebar.setImage(hostUrl);
 		if (sidebar.isHidden()) {
 			sidebar.hide();

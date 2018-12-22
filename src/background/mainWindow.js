@@ -90,16 +90,6 @@ export const getMainWindow = async() => {
 	return mainWindow;
 };
 
-export const addServer = (serverUrl) => getMainWindow().then((mainWindow) => {
-	mainWindow.show();
-
-	if (mainWindow.isMinimized()) {
-		mainWindow.restore();
-	}
-
-	mainWindow.send('add-host', serverUrl);
-});
-
 ipcMain.on('focus', async() => {
 	const mainWindow = await getMainWindow();
 

@@ -52,7 +52,7 @@ const attachRegisterFormEvents = () => {
 				button.value = i18n.__('Validating');
 				button.disabled = true;
 
-				servers.validateHost(host, 2000).then(function() {
+				servers.validate({ url: host }, 2000).then(function() {
 					button.value = i18n.__('Connect');
 					button.disabled = false;
 					resolve();
@@ -119,10 +119,9 @@ const attachRegisterFormEvents = () => {
 				url = defaultInstance;
 			}
 
-			url = servers.addHost(url);
-			if (url !== false) {
+			if (servers.add(url).length > 0) {
 				sidebar.show();
-				servers.setActive(url);
+				servers.setActive({ url });
 			}
 
 			input.value = '';
@@ -163,7 +162,7 @@ export default () => {
 	});
 
 	window.addEventListener('load', () => {
-		servers.initialize();
+		servers.load();
 		webview.initialize();
 		sidebar.initialize();
 
@@ -172,7 +171,5 @@ export default () => {
 		if (process.platform === 'darwin') {
 			setupTouchBar();
 		}
-
-		servers.restoreActive();
 	});
 };

@@ -49,24 +49,6 @@ class WebView extends EventEmitter {
 
 		webviewObj.addEventListener('ipc-message', (event) => {
 			this.emit(`ipc-message-${ event.channel }`, host.url, event.args);
-
-			switch (event.channel) {
-				case 'title-changed':
-					servers.setHostTitle(host.url, event.args[0]);
-					break;
-				case 'focus':
-					servers.setActive(host.url);
-					break;
-				case 'get-sourceId':
-					ipcRenderer.send('open-screenshare-dialog');
-					break;
-				case 'reload-server':
-					const active = this.getActive();
-					const server = active.getAttribute('server');
-					this.loading();
-					active.loadURL(server);
-					break;
-			}
 		});
 
 		webviewObj.addEventListener('dom-ready', () => {
@@ -164,9 +146,15 @@ class WebView extends EventEmitter {
 	initialize() {
 		this.webviewParentElement = document.body;
 
-		servers.forEach((host) => {
+		Object.values(servers.hosts).forEach((host) => {
 			this.add(host);
 		});
+
+		if (servers.active) {
+			this.setActive(servers.active);
+		} else {
+			this.showLanding();
+		}
 
 		ipcRenderer.on('screenshare-result', (e, id) => {
 			const webviewObj = this.getActive();

@@ -91,7 +91,7 @@ export class SelectServerPanel {
 			selectedIndex: this._getActiveServerIndex(),
 			segments: this._hosts,
 			change: (index) => {
-				servers.setActive(this._hosts[index].host);
+				servers.setActive({ url: this._hosts[index].host });
 			},
 		});
 		return this.control;
@@ -104,7 +104,7 @@ export class SelectServerPanel {
 			mode: 'fixed',
 			items: this._hosts,
 			highlight: (index) => {
-				servers.setActive(this._hosts[index].host);
+				servers.setActive({ url: this._hosts[index].host });
 			},
 		});
 		return this.control;
