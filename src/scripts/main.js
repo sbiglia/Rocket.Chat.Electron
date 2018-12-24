@@ -1,7 +1,6 @@
 import { ipcRenderer } from 'electron';
 import attachEvents from './events';
 import servers from './servers';
-import sidebar from './sidebar';
 import setupTouchBar from './touchBar';
 import webview from './webview';
 import i18n from '../i18n/index.js';
@@ -118,10 +117,7 @@ const attachRegisterFormEvents = () => {
 				url = defaultInstance;
 			}
 
-			if (servers.add(url).length > 0) {
-				sidebar.show();
-				servers.setActive({ url });
-			}
+			servers.add(url);
 
 			input.value = '';
 		}, function() {});
@@ -152,7 +148,6 @@ export default () => {
 	window.addEventListener('load', () => {
 		servers.load();
 		webview.initialize();
-		sidebar.initialize();
 
 		attachEvents();
 

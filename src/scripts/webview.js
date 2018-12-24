@@ -158,6 +158,25 @@ class WebView extends EventEmitter {
 			`);
 		});
 	}
+
+	adjustPadding(withSidebar = true) {
+		if (process.platform !== 'darwin') {
+			return;
+		}
+
+		document.querySelectorAll('webview').forEach((webviewObj) => {
+			webviewObj.insertCSS(`
+			aside.side-nav {
+				margin-top: ${ withSidebar ? '0' : '15px' };
+				overflow: hidden;
+				transition: margin .5s ease-in-out;
+			}
+			.sidebar {
+				padding-top: ${ withSidebar ? '0' : '10px' };
+				transition: margin .5s ease-in-out;
+			}`);
+		});
+	}
 }
 
 

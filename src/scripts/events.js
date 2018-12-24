@@ -1,14 +1,47 @@
 import { ipcRenderer, remote, shell } from 'electron';
+import React from 'react';
+import ReactDOM from 'react-dom';
 import dock from './dock';
 import menus from './menus';
 import servers from './servers';
-import sidebar from './sidebar';
 import tray from './tray';
 import webview from './webview';
+import Sidebar from '../components/Sidebar';
 import { __ } from '../i18n';
 const { app, dialog, getCurrentWindow } = remote;
 const { certificate } = remote.require('./background');
 
+
+let sidebar;
+
+
+const initializeSidebar = () => {
+	class SidebarContainer extends React.PureComponent {
+		constructor(props) {
+			super(props);
+			this.state = {};
+		}
+
+		render() {
+			return React.createElement(Sidebar, {
+				...this.state,
+				onReloadServer: ({ url }) => webview.getByUrl(url).reload(),
+				onRemoveServer: ({ url }) => servers.remove({ url }),
+				onOpenDevToolsForServer: ({ url }) => webview.getByUrl(url).openDevTools(),
+				onAddServer: () => servers.clearActive(),
+				onSortServers: (orderedUrls) => servers.sort(orderedUrls),
+				onActivateServer: (host) => servers.setActive(host),
+			});
+		}
+	}
+
+	ReactDOM.render(React.createElement(SidebarContainer, { ref: (i) => { sidebar = i; } }), document.querySelector('.Sidebar'));
+
+	sidebar.setState({
+		hosts: servers.ordered,
+		active: servers.active,
+	});
+};
 
 const updatePreferences = () => {
 	const mainWindow = getCurrentWindow();
@@ -28,12 +61,20 @@ const updatePreferences = () => {
 			localStorage.getItem('hideTray') !== 'true' : (process.platform !== 'linux'),
 		showUserStatus: (localStorage.getItem('showUserStatusInTray') || 'true') === 'true',
 	});
+
+	sidebar.setState({ visible: localStorage.getItem('sidebar-closed') !== 'true' });
+	webview.adjustPadding(localStorage.getItem('sidebar-closed') !== 'true');
 };
 
 const updateServers = () => {
 	menus.setState({
 		servers: servers.ordered.map(({ title, url }) => ({ title, url })),
 		currentServerUrl: servers.active,
+	});
+
+	sidebar.setState({
+		hosts: servers.ordered,
+		active: servers.active,
 	});
 };
 
@@ -148,7 +189,9 @@ const attachMenusEvents = () => {
 			}
 
 			case 'showServerList': {
-				sidebar.toggle();
+				const previousValue = localStorage.getItem('sidebar-closed') !== 'true';
+				const newValue = !previousValue;
+				localStorage.setItem('sidebar-closed', JSON.stringify(!newValue));
 				break;
 			}
 		}
@@ -183,60 +226,34 @@ const attachServersEvents = () => {
 
 	servers.on('active-cleared', () => {
 		webview.deactiveAll();
-		sidebar.deactiveAll();
-		sidebar.changeSidebarColor({});
 		webview.showLanding();
 		updateServers();
 	});
 
 	servers.on('active-setted', ({ url } = {}) => {
 		webview.setActive(url);
-		sidebar.setActive(url);
-
 		webview.getActive() && webview.getActive().send && webview.getActive().send('request-sidebar-color');
-
 		updateServers();
 	});
 
 	servers.on('host-added', (host) => {
+		servers.setActive(host);
 		webview.add(host);
-		sidebar.add(host);
-		sidebar.setActive(host.url);
-		webview.setActive(host.url);
 		updateServers();
 	});
 
 	servers.on('host-removed', (host) => {
 		webview.remove(host.url);
-		sidebar.remove(host.url);
 		updateServers();
 	});
 
-	servers.on('title-setted', (host) => {
-		sidebar.setLabel(host.url, host.title);
-		updateServers();
-	});
-};
-
-const attachSidebarEvents = () => {
-	sidebar.on('add-server', () => {
-		servers.clearActive();
-	});
-
-	sidebar.on('servers-sorted', (orderedUrls) => {
-		servers.sort(orderedUrls);
+	servers.on('sorted', () => {
 		updateServers();
 	});
 
-	sidebar.on('badge-setted', () => {
-		const badge = sidebar.getGlobalBadge();
-		tray.setState({ badge });
-		dock.setState({ badge });
+	servers.on('title-setted', () => {
+		updateServers();
 	});
-
-	sidebar.on('reload-server', (hostUrl) => webview.getByUrl(hostUrl).reload());
-	sidebar.on('remove-server', (hostUrl) => servers.remove({ url: hostUrl }));
-	sidebar.on('open-devtools-for-server', (hostUrl) => webview.getByUrl(hostUrl).openDevTools());
 };
 
 const attachTrayEvents = () => {
@@ -248,8 +265,17 @@ const attachTrayEvents = () => {
 };
 
 const attachWebviewEvents = () => {
-	webview.on('ipc-message-unread-changed', (hostUrl, [badge]) => {
-		sidebar.setBadge(hostUrl, badge);
+	webview.on('ipc-message-unread-changed', (url, [badge]) => {
+		sidebar.setState({ badges: { ...sidebar.state.badges, [url]: badge ? badge : null } });
+
+		const { count, unread } = Object.values(sidebar.state.badges)
+			.reduce(({ count, unread }, badge) => ({
+				count: count + (isNaN(parseInt(badge, 10)) ? 0 : parseInt(badge, 10)),
+				unread: unread || !!badge,
+			}), { count: 0, unread: false });
+		const globalBadge = { count, title: (count > 0 && String(count)) || (unread && '•') || null };
+		tray.setState({ badge: globalBadge });
+		dock.setState({ badge: globalBadge });
 
 		if (typeof badge === 'number' && localStorage.getItem('showWindowOnUnreadChanged') === 'true') {
 			const mainWindow = getCurrentWindow();
@@ -266,8 +292,11 @@ const attachWebviewEvents = () => {
 		dock.setState({ status });
 	});
 
-	webview.on('ipc-message-sidebar-background', (hostUrl, [color]) => {
-		sidebar.changeSidebarColor(color);
+	webview.on('ipc-message-sidebar-background', (url, [{ color, background }]) => {
+		sidebar.setState({
+			colors: { ...sidebar.state.colors, [url]: color },
+			backgrounds: { ...sidebar.state.backgrounds, [url]: background },
+		});
 	});
 
 	webview.on('ipc-message-title-changed', (url, [title]) => {
@@ -290,11 +319,9 @@ const attachWebviewEvents = () => {
 	});
 
 	webview.on('dom-ready', () => {
-		if (sidebar.isHidden()) {
-			sidebar.hide();
-		} else {
-			sidebar.show();
-		}
+		sidebar.setState({ visible: localStorage.getItem('sidebar-closed') !== 'true' });
+		webview.adjustPadding(localStorage.getItem('sidebar-closed') !== 'true');
+		webview.getActive() && webview.getActive().send && webview.getActive().send('request-sidebar-color');
 	});
 };
 
@@ -320,23 +347,12 @@ const destroyAll = () => {
 export default () => {
 	window.addEventListener('beforeunload', destroyAll);
 
+	initializeSidebar();
+
 	window.addEventListener('focus', () => webview.focusActive());
-
-	window.addEventListener('keydown', (e) => {
-		if (e.key === 'Control' || e.key === 'Meta') {
-			sidebar.setKeyboardShortcutsVisible(true);
-		}
-	});
-
-	window.addEventListener('keyup', function(e) {
-		if (e.key === 'Control' || e.key === 'Meta') {
-			sidebar.setKeyboardShortcutsVisible(false);
-		}
-	});
 
 	attachMenusEvents();
 	attachServersEvents();
-	attachSidebarEvents();
 	attachTrayEvents();
 	attachWebviewEvents();
 	attachMainWindowEvents();

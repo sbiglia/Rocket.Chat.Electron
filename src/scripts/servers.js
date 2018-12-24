@@ -111,11 +111,11 @@ class Servers extends EventEmitter {
 
 		const host = { ...this.hosts[url], url, ...props };
 
-		if (host.url === 'https://open.rocket.chat') {
+		if (host.url === 'https://open.rocket.chat/') {
 			host.title = 'Rocket.Chat';
-		} else if (host.url === 'https://unstable.rocket.chat') {
+		} else if (host.url === 'https://unstable.rocket.chat/') {
 			host.title = 'Rocket.Chat (unstable)';
-		} else if (host.title === 'Rocket.Chat' && host.url !== 'https://open.rocket.chat') {
+		} else if (host.title === 'Rocket.Chat' && host.url !== 'https://open.rocket.chat/') {
 			host.title = `${ host.title } - ${ host.url }`;
 		}
 
