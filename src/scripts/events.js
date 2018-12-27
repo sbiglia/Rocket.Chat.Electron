@@ -348,6 +348,7 @@ export default () => {
 	window.addEventListener('beforeunload', destroyAll);
 
 	initializeSidebar();
+	webview.initialize();
 
 	window.addEventListener('focus', () => webview.focusActive());
 
