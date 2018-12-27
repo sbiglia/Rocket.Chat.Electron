@@ -1,4 +1,4 @@
-import { app, dialog } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import jetpack from 'fs-jetpack';
 import url from 'url';
 import i18n from '../i18n/index.js';
@@ -57,6 +57,9 @@ class CertificateStore {
 				delete this.queued[certificate.fingerprint];
 			});
 		});
+
+
+		ipcMain.on('clear-certificates', () => this.clear());
 	}
 
 	load() {

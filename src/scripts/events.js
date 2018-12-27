@@ -9,7 +9,6 @@ import webview from './webview';
 import Sidebar from '../components/Sidebar';
 import { __ } from '../i18n';
 const { app, dialog, getCurrentWindow } = remote;
-const { certificate } = remote.require('./background');
 
 
 let sidebar;
@@ -99,7 +98,7 @@ const attachMenusEvents = () => {
 
 	menus.on('reload-server', ({ ignoringCache = false, clearCertificates = false } = {}) => {
 		if (clearCertificates) {
-			certificate.clear();
+			ipcRenderer.send('clear-certificates');
 		}
 
 		const activeWebview = webview.getActive();
