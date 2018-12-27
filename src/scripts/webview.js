@@ -139,7 +139,7 @@ class WebView extends EventEmitter {
 	}
 
 	initialize() {
-		this.webviewParentElement = document.body;
+		this.webviewParentElement = document.querySelector('.MainView');
 
 		servers.ordered.forEach((host) => {
 			this.add(host);

@@ -1,11 +1,11 @@
 .landing {
 	z-index: 1;
 	-webkit-app-region: drag;
-	position: fixed;
+	position: absolute;
 	top: 0;
 	right: 0;
 	bottom: 0;
-	left: 68px;
+	left: 0;
 	overflow-y: auto;
 	text-align: center;
 	background-color: @primary-background-color;
@@ -136,6 +136,3 @@
 	}
 }
 
-.Sidebar--hidden ~ .landing {
-	left: 0;
-}

@@ -5,6 +5,12 @@
 
 	user-select: none;
 	cursor: default;
+	box-sizing: border-box;
+	width: 100vw;
+	height: 100vh;
+	position: relative;
+	display: flex;
+	align-items: stretch;
 
 	.drag-region {
 		position: absolute;
@@ -32,6 +38,12 @@
 		.loading-component;
 		display: none;
 	}
+
+	.MainView {
+		flex: 1;
+		position: relative;
+	}
+
 }
 
 .only-offline {
