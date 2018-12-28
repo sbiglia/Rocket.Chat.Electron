@@ -8,13 +8,14 @@ import tray from './tray';
 import webview from './webview';
 import Sidebar from '../components/Sidebar';
 import { __ } from '../i18n';
+import MainView from '../components/MainView';
 const { app, dialog, getCurrentWindow } = remote;
 
 
 let sidebar;
+let mainView;
 
-
-const initializeSidebar = () => {
+const initializeApp = () => {
 	class SidebarContainer extends React.PureComponent {
 		constructor(props) {
 			super(props);
@@ -34,7 +35,21 @@ const initializeSidebar = () => {
 		}
 	}
 
+	class MainViewContainer extends React.PureComponent {
+		constructor(props) {
+			super(props);
+			this.state = {};
+		}
+
+		render() {
+			return React.createElement(MainView, {
+				...this.state,
+			});
+		}
+	}
+
 	ReactDOM.render(React.createElement(SidebarContainer, { ref: (i) => { sidebar = i; } }), document.querySelector('.Sidebar'));
+	ReactDOM.render(React.createElement(MainViewContainer, { ref: (i) => { mainView = i; } }), document.querySelector('.MainView'));
 
 	sidebar.setState({
 		hosts: servers.ordered,
@@ -346,7 +361,7 @@ const destroyAll = () => {
 export default () => {
 	window.addEventListener('beforeunload', destroyAll);
 
-	initializeSidebar();
+	initializeApp();
 	webview.initialize();
 
 	window.addEventListener('focus', () => webview.focusActive());

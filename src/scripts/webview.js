@@ -4,23 +4,6 @@ import servers from './servers';
 import i18n from '../i18n/index.js';
 
 
-const setupI18n = () => {
-	document.querySelector('#login-card .connect__prompt').innerHTML = i18n.__('Enter_your_server_URL');
-	document.querySelector('#login-card #invalidUrl').innerHTML = i18n.__('No_valid_server_found');
-	document.querySelector('#login-card .connect__error').innerHTML = i18n.__('Check_connection');
-	document.querySelector('#login-card .login').innerHTML = i18n.__('Connect');
-};
-
-
-const attachConnectionStateEvents = () => {
-	const handleOnline = () => document.body.classList.remove('offline');
-	const handleOffline = () => document.body.classList.add('offline');
-	window.addEventListener('online', handleOnline);
-	window.addEventListener('offline', handleOffline);
-	navigator.onLine ? handleOnline() : handleOffline();
-};
-
-
 const attachRegisterFormEvents = () => {
 	const defaultInstance = 'https://open.rocket.chat';
 
@@ -234,12 +217,12 @@ class WebView extends EventEmitter {
 		while (!(item = this.getActive()) === false) {
 			item.classList.remove('active');
 		}
-		document.querySelector('.landing').classList.add('hide');
+		document.querySelector('.Landing').classList.add('Landing--hidden');
 	}
 
 	showLanding() {
 		this.loaded();
-		document.querySelector('.landing').classList.remove('hide');
+		document.querySelector('.Landing').classList.remove('Landing--hidden');
 	}
 
 	setActive(hostUrl) {
@@ -273,8 +256,6 @@ class WebView extends EventEmitter {
 	}
 
 	initialize() {
-		setupI18n();
-		attachConnectionStateEvents();
 		attachRegisterFormEvents();
 
 		this.webviewParentElement = document.querySelector('.MainView');
